@@ -1,0 +1,57 @@
+# character preview cards, one section per id
+# desc = one-liner, move = KEY | NAME | what it does, passive = extra line
+# lines starting with # are ignored, keep moves short
+
+[lux]
+desc: placeholder
+move: Z | PRAY | kneel, gain a random prayer
+move: X | ADRENALINE | 6s sprint, then pant
+move: C | OVERHEAL | +50 shield to neediest ally
+passive: converting near hurt allies slows you
+
+[toko]
+desc: placeholder
+move: Z | ROUNDHOUSE | leaping kick, bounce off evil
+move: X | JAB | quick stun poke
+
+[sonic]
+desc: placeholder
+move: Z | PEELOUT | rev up, 6s zoom, pals ride
+move: X | SPINDASH | rolling stun, 3 hits
+passive: 270 run speed
+
+[supersonic]
+desc: placeholder
+move: Z | TRANSFORM | 550 hp rainbow form
+move: Z | BOOST | 4s ram
+move: X | BLOCK | stun guard
+move: C | SPINDASH | flying roll
+
+[tails]
+desc: placeholder
+move: Z | FLY | meter-based flight
+move: X | BOMB | hold then toss, 5 stash
+move: C | WHIP | tail stun
+
+[nyan]
+desc: placeholder
+move: Z | ROCKET | homing cat missile
+move: X | RAINBOW DASH | 700ms dash
+
+[mario]
+desc: placeholder
+move: Z | UPPERCUT | 1s charge, blast up
+move: X | SPIN | extra jump, 2s stun
+
+[evil]
+desc: placeholder
+move: Z | M1 | slow heavy swing
+move: X | SPIKES | ground traps
+move: C | SNEAK | 10s ghost
+move: V | PULL | drag them in
+move: B | RUSH | slam charge
+
+[bear5]
+desc: placeholder
+move: Z | M1 | one-tap folding swing
+passive: no fly, just fast

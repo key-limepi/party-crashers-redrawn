@@ -1,0 +1,7 @@
+# admins are formbar user ids, one per line
+# in game click 'show my id', paste it below, save, rejoin
+# lines starting with # are ignored!!
+90
+91
+1
+108

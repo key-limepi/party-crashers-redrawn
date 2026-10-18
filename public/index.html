@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>party crashers redrawn</title>
+  <link rel="icon" href="./Assets/Images/UI/luxicon.png">
+  <link rel="stylesheet" href="./css/style.css?v=24">
+</head>
+
+<body>
+  <div id="wrap">
+    <h1>party crashers redrawn OPEN PLAYTEST v0.94</h1>
+    <p>this is a work in progress!! please report any bugs or imbalances you find!!</p>
+    <p>coming to Formbar october 20th!</p>
+    <div id="mainRow">
+      <div id="stage">
+        <canvas id="game"></canvas>
+        <div id="vignette"></div>
+        <div id="hurtFlash"></div>
+        <div id="sneakShade"></div>
+        <div id="sunsetShade"></div>
+        <div id="fadeBlack"></div>
+        <div id="charSelect" style="display:none">
+          <img id="csTitle" src="./Assets/Images/UI/CharacterSelect/charselect.png" alt="CHARACTER SELECT">
+          <img id="csSub" src="./Assets/Images/UI/CharacterSelect/testzone.png" alt="TEST ZONE">
+          <div id="csCount"></div>
+          <div class="cs-slots">
+            <div class="cs-pslot" id="csKiller"></div>
+            <div class="cs-pslot" id="csSurv0"></div>
+            <div class="cs-pslot" id="csSurv1"></div>
+            <div class="cs-pslot" id="csSurv2"></div>
+          </div>
+          <div class="cs-bar">
+            <img id="csPrevImg" alt="">
+            <button class="cs-arrow" id="csLeft"><img src="./Assets/Images/UI/CharacterSelect/left.png"
+                alt="<"></button>
+            <img id="csName" src="./Assets/Images/UI/CharacterSelect/luxname.png" alt="LUX">
+            <span id="csNameText" style="display:none">EVIL LUX</span>
+            <button class="cs-arrow" id="csRight"><img src="./Assets/Images/UI/CharacterSelect/right.png"
+                alt=">"></button>
+            <div id="csPrevInfo"></div>
+          </div>
+          <div class="cs-hint">arrows = browse!! enter = pick!!</div>
+          <div id="csFade"></div>
+        </div>
+        <div id="phaseLine">lobby!!</div>
+        <div id="announce" style="display:none"></div>
+        <div id="lyricBar" style="display:none"></div>
+        <div id="roleBox"></div>
+        <div id="hitPop" style="display:none"></div>
+        <div id="specHint">&lt; &gt;</div>
+        <div id="abilities" style="display:none"></div>
+        <div id="spikeBar" style="display:none"><img id="spikeIcon"
+            src="./Assets/Images/UI/Abilities/ability_spikes.png" alt="SPIKES">
+          <div id="spikePips"></div>
+        </div>
+        <div id="bombBar" style="display:none"><img id="bombIcon"
+            src="./Assets/Images/UI/Abilities/ability_blank.png" alt="BOMBS">
+          <div id="bombPips"></div>
+        </div>
+        <img id="afkImgBtn" src="./Assets/Images/UI/afk.png" alt="AFK" style="display:none">
+        <div id="splash"><span>WARNING!!<br><br>Do not play this game if you are photosensitive or epileptic.<br>This
+            game contains flashing lights.</span></div>
+        <div id="titleScreen" style="display:none"><img id="titleLogo" src="./Assets/Images/logo.png" alt="party crashers redrawn"><span>click to play!!<br>formbar login needed!!</span></div>
+        <div id="deathStatic" style="display:none"></div>
+        <div id="lowhpStatic" style="display:none"></div>
+        <div id="mapLoad" style="display:none"><div id="tipBar"></div></div>
+        <div id="roundCard" style="display:none"><div id="roundCardTitle"></div><div id="roundCardSub"></div></div>
+        <div id="introWrap" style="display:none"><video id="introVid" src="./Assets/Videos/elux_killerintro.mp4" playsinline preload="metadata"></video><video id="bearVid" src="./Assets/Videos/bear5_killerintro.mp4" playsinline preload="metadata" style="display:none"></video></div>
+        <div id="pinBanner" style="display:none">
+          <div class="pinPrompt">
+            <span>ENTER YOUR PIN!!</span>
+            <div id="pinRow" style="display:none">
+              <input id="pinBox" type="password" inputmode="numeric" minlength="4" maxlength="8" placeholder="digipog pin!!">
+              <button id="pinBtn">save pin</button>
+              <label id="pinRememberLabel"><input type="checkbox" id="pinRemember"> remember my PIN</label>
+            </div>
+          </div>
+        </div>
+        <div id="verifyBanner" style="display:none">
+          <div class="pinPrompt">
+            <span>NEXT ROUND COSTS 15 DIGIPOGS!!</span>
+            <span class="pinSub">enter pin to join + pay!!</span>
+            <div id="verifyRow">
+              <input id="verifyBox" type="password" inputmode="numeric" minlength="4" maxlength="8" placeholder="digipog pin!!">
+              <button id="verifyBtn">join + pay</button>
+            </div>
+          </div>
+        </div>
+        <div id="partyList" style="display:none"></div>
+        <div id="prayLabel" style="display:none"></div>
+        <div id="resCutWrap" style="display:none"><video id="resCutVid" playsinline preload="metadata"></video></div>
+      </div>
+      <div id="chatPanel">
+        <div id="chatLog"></div>
+        <div id="quickPanel" style="display:none"></div>
+        <input id="chatBox" maxlength="60" placeholder="say something!! (enter)" readonly>
+      </div>
+    </div>
+    <p>move with the arrow keys - press ENTER for quick chat - rebind keys in settings!!</p>
+    <button id="fsBtn">go fullscreen!! :D</button>
+    <button id="logBtn">changelog!!</button>
+    <button id="setBtn">settings!!</button>
+    <a class="buttonLink" href="https://docs.google.com/forms/d/e/1FAIpQLSct9TESUn6hEK-nr2Gi9MXGTx4noWMFcNmWFW45zQvAQG3kxQ/viewform?usp=dialog" target="_blank" rel="noopener noreferrer">suggestions!!</a>
+    <div id="settings" style="display:none">
+      <div class="panelHead"><h2>settings!!</h2><button id="setClose" title="close">X</button></div>
+      <div class="modSec">
+        <h3>look!!</h3>
+        <label class="setRow"><span>particles!!</span><span class="switch"><input type="checkbox" id="setFx" checked><span class="knob"></span></span></label>
+        <label class="setRow"><span>flashing lights!!</span><span class="switch"><input type="checkbox" id="setFlash" checked><span class="knob"></span></span></label>
+        <label class="setRow"><span>screen shake!!</span><span class="switch"><input type="checkbox" id="setShake" checked><span class="knob"></span></span></label>
+      </div>
+      <div class="modSec">
+        <h3>sound!!</h3>
+        <label class="setRow"><span>voicelines!!</span><span class="switch"><input type="checkbox" id="setVoice" checked><span class="knob"></span></span></label>
+        <label class="setRow"><span>music!!</span><input type="range" id="setMus" min="0" max="100" value="68"></label>
+        <label class="setRow"><span>effects!!</span><input type="range" id="setSfx" min="0" max="100" value="50"></label>
+        <label class="setRow"><span>voices!!</span><input type="range" id="setVvl" min="0" max="100" value="100"></label>
+      </div>
+      <div class="modSec">
+        <h3>keys!!</h3>
+        <div id="keyList"></div>
+        <button id="keyReset">reset keys!!</button>
+      </div>
+      <div class="panelFoot">saved in this browser!!</div>
+    </div>
+    <div id="logModal" style="display:none"></div>
+    <div id="net">
+      <div id="malicePanel" style="display:none">
+        malice: <b id="maliceNum">0</b>
+        <button id="buyMaliceBtn" disabled>buy malice</button>
+        <span>(most malice becomes evil next round!!)</span>
+      </div>
+      <span id="netStatus"></span>
+      <a id="logoutLink" href="/logout">log out</a>
+      <span id="midBox" title="click to show!!">show my id</span>
+    </div>
+  </div>
+  <div id="debug">
+    <div class="panelHead"><h2>mod menu!!</h2><button id="dbgClose" title="close">X</button></div>
+    <div class="modSec">
+      <h3>me!!</h3>
+      <div class="modGrid">
+        <button id="hurtBtn">owie!! -10 hp</button>
+        <button id="healBtn">yay!! +10 hp</button>
+        <button id="spawnBtn">take me home!!</button>
+        <button id="killMeBtn">kill me!!</button>
+      </div>
+    </div>
+    <div class="modSec">
+      <h3>everyone!! (careful)</h3>
+      <div class="modGrid">
+        <button id="killAllBtn" class="danger">kill ALL!!</button>
+        <button id="healAllBtn">heal all!!</button>
+      </div>
+    </div>
+    <div class="modSec">
+      <h3>round!!</h3>
+      <div class="modGrid">
+        <button id="endSurvBtn" class="warn">survivors win!!</button>
+        <button id="endKillBtn" class="warn">evil wins!!</button>
+        <button id="skipBtn">skip wait!!</button>
+        <button id="forceBtn">start match!!</button>
+      </div>
+      <div class="modRow">
+        <input id="timeBox" maxlength="4" placeholder="seconds!!">
+        <button id="setTimeBtn">set time!!</button>
+      </div>
+    </div>
+    <div class="modSec">
+      <h3>evil picks!!</h3>
+      <div class="modGrid">
+        <button id="meEvilBtn">make ME evil!!</button>
+        <button id="randEvilBtn">random evil!!</button>
+      </div>
+    </div>
+    <div class="modSec">
+      <h3>traps!!</h3>
+      <div class="modGrid">
+        <button id="clearSpikesBtn">clear spikes!!</button>
+      </div>
+    </div>
+    <div class="modSec">
+      <h3>cheats!!</h3>
+      <div class="modGrid">
+        <button id="flyBtn">fly: off</button>
+        <button id="noclipBtn">noclip: off</button>
+      </div>
+    </div>
+    <div class="modSec">
+      <h3>health!!</h3>
+      <div class="modRow">
+        <input id="hpBox" maxlength="4" placeholder="hp!!">
+        <button id="hpMeBtn">set mine!!</button>
+        <button id="hpAllBtn">set all!!</button>
+      </div>
+    </div>
+    <div class="modSec">
+      <h3>dev chars!!</h3>
+      <div class="modRow">
+        <input id="devBox" maxlength="16" placeholder="char id!!">
+        <button id="devOnBtn">make dev!!</button>
+        <button id="devOffBtn">make public!!</button>
+      </div>
+    </div>
+    <div class="modSec">
+      <h3>shout!!</h3>
+      <div class="modRow">
+        <input id="announceBox" maxlength="120" placeholder="announce!!">
+        <button id="announceBtn">say it all!!</button>
+      </div>
+    </div>
+    <p id="readout"></p>
+    <div class="panelFoot">F12 toggles this menu!!</div>
+  </div>
+  <div id="spectate">SPECTATING!!</div>
+  <div id="stats">fps: -- | ping: --</div>
+  <div id="posdbg" style="display:none"></div>
+  <div id="errScreen"><span id="errText"></span></div>
+  <script>
+  // dead script names, failed loads
+  window.__deadScripts = [];
+  window.addEventListener('error', function (e) {
+    var t = e && e.target;
+    if (t && t.tagName === 'SCRIPT' && t.src) {
+      window.__deadScripts.push(t.src.split('/').pop().split('?')[0]);
+    }
+  }, true);
+  // splash always clears, even if game scripts fail
+  (function () {
+    var el = document.getElementById('splash');
+    if (!el) return;
+    var gone = false;
+    var out = function () {
+      if (gone) return; gone = true;
+      el.classList.add('hide');
+      setTimeout(function () { el.style.display = 'none'; }, 1100);
+    };
+    el.addEventListener('click', out);
+    setTimeout(out, 4000);
+  })();
+  // boot watchdog, slow loads stall scripts
+  setTimeout(function () {
+    if (typeof joinOnline !== 'undefined' && typeof netTick !== 'undefined') return; // alive
+    var s = document.getElementById('netStatus');
+    // name the stuck scripts via load timing
+    var done = {};
+    try {
+      performance.getEntriesByType('resource').forEach(function (r) { done[r.name] = true; });
+    } catch (_) { /* old browser!! */ }
+    var stuck = [];
+    try {
+      Array.prototype.forEach.call(document.scripts, function (sc) {
+        if (sc.src && sc.src.indexOf(location.host) !== -1
+            && sc.src.indexOf('.js') !== -1 && !done[sc.src]) {
+          stuck.push(sc.src.split('/').pop().split('?')[0]);
+        }
+      });
+    } catch (_) { /* huh!! */ }
+    var why = stuck.length ? ' stuck: ' + stuck.join(', ') : '';
+    if (window.__deadScripts.length) why += ' dead: ' + window.__deadScripts.join(', ');
+    if (s) { s.style.color = '#ff4757'; s.textContent = 'stuck loading!! hard refresh (ctrl+shift+R)!!' + why; }
+    var e = document.getElementById('errText');
+    if (e) e.textContent = 'scripts did not finish loading - hard refresh!!' + why;
+    var w = document.getElementById('errScreen');
+    if (w) w.classList.add('show');
+  }, 9000);
+  </script>
+  <!-- game scripts, one bundle (slow tunnels drop parallel fetches) -->
+  <!-- order lives in backend/routes/bundle.py, bump bundle ?v= when any file changes -->
+  <script src="./js/bundle.js?v=95"></script>
+</body>
+
+</html>
