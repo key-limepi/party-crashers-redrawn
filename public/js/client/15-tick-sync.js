@@ -383,7 +383,7 @@
         r.onGround = d.onGround ?? true;
         r.alive = d.alive ?? d.hp > 0;
         r.evil = id === data.killer_id;
-        r.maxHp = d.maxhp || (r.evil && r.char === 'bear5' ? 999 : (r.evil ? 250 : 100)); // true bars
+        r.maxHp = d.maxhp || (r.evil && r.char === 'bear5' ? 999 : (r.evil ? EVIL_HP : 100)); // true bars
         r.shield = d.shield || 0; // temp hp
         r.super = !!d.super; // glowing or not
         r.rainbow = !!d.super; // gold bar
@@ -412,6 +412,11 @@
         r.praying = !!d.praying;
         r.rushing = !!d.rushing;
         r.panting = !!d.panting;
+        if (!r.evil && r.char === 'lux' && r.alive && data.phase === 'round') {
+          if (r.praying && !r._wasPraying) fileSfx(LUX_SFX.prayer, { v: 0.32 });
+          if (r.rushing && !r._wasRushing) fileSfx(LUX_SFX.run, { v: 0.45 });
+          if (r.panting && !r._wasPanting) fileSfx(LUX_SFX.panting, { v: 0.16 });
+        }
         r.kickUntil = !!d.kickUntil;
         r.jabUntil = !!d.jabUntil;
         r.throwUntil = !!d.throwUntil;
@@ -422,6 +427,7 @@
         r.redFlash = !!d.windup && !!r.evil; // red warning
         r.cyanFlash = !!d.windup && !r.evil; // cyan windup
         r.cowering = !!d.cower;
+        r.pullTarget = d.pulltarget || null;
         // synced animations (super sonic, evil rush, bear5 trail)
         const an = d.anim || null;
         r.trail = !!d.trail;
@@ -499,6 +505,9 @@
           r.pose = d.pose;
           r.poseUntil = Date.now() + 350;
           r.poseImg = poseImage(r.evil, r.char, d.pose, d.m1v);
+          if (!r.evil && r.char === 'lux' && d.pose === 'patch' && r.alive && data.phase === 'round') {
+            fileSfx(LUX_SFX.heal, { v: 0.48 });
+          }
           if (r.char === 'bear5' && d.pose === 'bear-fold') {
             r._bearFoldStart = Date.now();
             r._bearFoldDuration = 440;
@@ -530,15 +539,30 @@
           r.poseImg = superSprites.transform[Math.floor(Date.now() / 200) % superSprites.transform.length];
           r.poseUntil = Date.now() + 150;
         }
-        // mario uppercut, play once
-        if (!r.evil && r.char === 'mario' && (d.pose === 'uppercharge' || d.pose === 'uppercut')) {
-          if (r._mupPose !== d.pose) { r._mupPose = d.pose; r._mupStart = Date.now(); }
-          const seq = d.pose === 'uppercharge' ? marioSprites.uppercharge : marioSprites.upper;
-          const per = d.pose === 'uppercharge' ? 333 : 600;
-          r.poseImg = seq[Math.min(seq.length - 1, Math.floor((Date.now() - r._mupStart) / per))];
+        // Mario's throw animation and observed fireball
+        if (!r.evil && r.char === 'mario' && d.pose === 'fireball') {
+          if (r._mfbPose !== d.pose) {
+            r._mfbPose = d.pose;
+            r._mfbStart = Date.now();
+          }
+          const age = Date.now() - r._mfbStart;
+          r.poseImg = marioSprites.fireballThrow[Math.min(marioSprites.fireballThrow.length - 1, Math.floor(age / 80))];
           r.poseUntil = Date.now() + 150;
-        } else if (r._mupPose) {
-          r._mupPose = null;
+        } else if (r._mfbPose) {
+          r._mfbPose = null;
+        }
+        const observedFireball = !r.evil && r.char === 'mario' && d.fireball;
+        const remoteShot = (game.marioFireballs ||= []).find((f) => !f.mine && f.owner === r.id);
+        if (observedFireball && observedFireball.id) {
+          const shot = remoteShot || { owner: r.id, mine: false, start: Date.now() };
+          if (shot.id !== observedFireball.id) shot.start = Date.now();
+          shot.id = observedFireball.id;
+          shot.x = observedFireball.x; shot.y = observedFireball.y;
+          shot.vx = observedFireball.vx; shot.vy = observedFireball.vy;
+          shot.syncedAt = Date.now();
+          if (!remoteShot) game.marioFireballs.push(shot);
+        } else if (remoteShot) {
+          game.marioFireballs = game.marioFireballs.filter((f) => f !== remoteShot);
         }
         const lostHp = r._lastHp !== undefined && r.hp < r._lastHp;
         const realHit = lostHp && r.hp < (r.maxHp || 100);
@@ -589,7 +613,7 @@
           if (r._wasPraying && !r.praying) game.luxGlow(ex, ey, '#ffe93b', 5, 120); // prayer lands
           if (r._wasRushing && !r.rushing) game.luxGlow(ex, r.pos.y + r.h - 8, '#ffffff', 4, 130); // skid stop
         }
-        r._wasPraying = !!r.praying; r._wasRushing = !!r.rushing;
+        r._wasPraying = !!r.praying; r._wasRushing = !!r.rushing; r._wasPanting = !!r.panting;
         r._wasAlive = !!r.alive;
         r._lastHp = r.hp;
         r._lastShield = r.shield || 0;
@@ -615,7 +639,7 @@
       // bonus hp gained sting
       if (mePick && (mePick.shield || 0) > (p.shield || 0) && p.alive !== false) {
         fileSfx(SFX + 'dash_release.wav', {});
-        sayStatus('overhealed!!', 2);
+        sayStatus('patched!!', 2);
         game.luxRing(p.pos.x + p.w / 2, p.pos.y + p.h / 2, '#ffd23f', 300); // empowered
         game.luxGlow(p.pos.x + p.w / 2, p.pos.y + p.h / 2, '#ffd23f', 6, 120);
       }
@@ -722,7 +746,7 @@
           const lmsHp = Math.max(LMS_HP, survHp());
           p.maxHp = superGlow ? SUPER_HP : lmsHp; p.hp = superGlow ? SUPER_HP : lmsHp;
           S.dashCD = 0; S.cowerCD = 0; L.prayCD = 0; L.adCD = 0; L.overCD = 0; T.kickCD = 0; T.jabCD = 0; TW.flyCD = 0; TW.bombCD = 0; TW.whipCD = 0; TW.bombsLeft = 5;
-          NY.rocketCD = 0; NY.dashCD = 0; MU.upperCD = 0;
+          NY.rocketCD = 0; NY.dashCD = 0; MU.fireballCD = 0;
           SS.boostCD = 0; SS.blockCD = 0; SS.spinCD = 0;
           fetch('/api/heal', {
             method: 'POST',
@@ -820,6 +844,7 @@
       // stun sting
       if (p.evil && (p.stunT || 0) > (p._lastStun || 0)) {
         fileSfx(SFX + 'basic_hit.wav', {});
+        hurtVignette('black');
       }
       p._lastStun = p.stunT || 0;
       // words on recovery
@@ -871,7 +896,7 @@
       }
       if (latest.v === net.id) {
         // i ate it
-        hurtVignette();
+        if (!t.p.evil) hurtVignette('red');
         fileSfx(SFX + 'ouch!.mp3', { v: 1 }); // loud on purpose
         return;
       }
@@ -892,11 +917,12 @@
       hitPopT = setTimeout(() => { hitPop.style.display = 'none'; }, 1200);
     }
 
-    function hurtVignette() {
+    function hurtVignette(color) {
       if (!hurtFlash) return;
+      hurtFlash.classList.toggle('black', color === 'black');
       hurtFlash.style.transition = 'none';
       hurtFlash.style.opacity = '1';
-      void hurtFlash.offsetWidth; // snap to full red
+      void hurtFlash.offsetWidth; // restart flash at full opacity
       hurtFlash.style.transition = '';
       hurtFlash.style.opacity = '0';
     }

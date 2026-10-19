@@ -157,17 +157,19 @@
 
     /** mario abilities: one queued key press (Z/X/...) */
     function castMario(p, now, ab) {
-      if (ab === 'Z' && now >= MU.upperCD && !MU.windupUntil && !MU.upperUntil) {
-        // charge uppercut
-        MU.windupUntil = now + 1000;
-        MU.upperHit = false;
+      if (ab === 'Z' && now >= MU.fireballCD && !MU.fireballUntil && !MU.fireballPending) {
+        // throw a fireball
+        MU.fireballUntil = now + 650;
+        MU.fireballLaunchAt = now;
+        MU.fireballPending = true;
+        MU.fireballProjectile = null;
+        MU.fireballDir = p.facing || 1;
         p.rooted = true;
-        p.actionImg = marioSprites.uppercharge[0]; p.actionT = 0.15;
-        setPose('uppercharge', 1000);
-        fileSfx(SFX + 'uppercut_charge.wav', {});
+        p.actionImg = marioSprites.fireballThrow[0]; p.actionT = 0.15;
+        setPose('fireball', 650);
+        fileSfx(SFX + 'mario-fireball.mp3', {});
       } else if (ab === 'X' && now >= MU.spinCD && !MU.spinUntil && !MU.spinUsed) {
         // spin jump, one per air
-        MU.spinCD = now + (p.onGround ? 5000 : 8000); // ground recharges fast
         MU.spinUsed = true;
         MU.spinUntil = now + 1000;
         MU.spinHit = false;

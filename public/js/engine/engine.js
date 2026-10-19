@@ -265,22 +265,6 @@ class PlatformerEngine {
     b.pos.x = ox; b.pos.y = oy; // nothing found, leave it
   }
 
-  // tilt the body to match the slope under its feet
-  updateTilt(b, dt) {
-    let want = 0;
-    if (b.alive !== false && !b.rocketing && Math.abs(b.vel.y || 0) < 60) {
-      const cx = b.pos.x + b.w / 2, feet = b.pos.y + b.h;
-      const l = this.floorAt(cx - 22, feet), r = this.floorAt(cx + 22, feet);
-      if (l !== null && r !== null) {
-        const ang = Math.atan2(r - l, 44);
-        if (Math.abs(ang) > 0.08) want = Math.max(-0.6, Math.min(0.6, ang)); // ignore tiny bumps
-      }
-    }
-    const directionStep = 0.6 / 8;
-    const direction = Math.max(-8, Math.min(7, Math.round(want / directionStep)));
-    b.tilt = direction * directionStep;
-  }
-
   // split motion
   moveBody(b, dt, statics) {
     if (this.noclip && b === this.player) {
@@ -305,7 +289,26 @@ class PlatformerEngine {
   // pop out
   resolveAxis(b, statics, axis, previousBottom = b.bottom) {
     let steppedUp = false;
+    // Semisolid art often has a one-pixel collider. Sweep the player's feet
+    // across a small landing depth so fast falls cannot skip its top surface.
+    const semiLandingDepth = 8;
+    let semiLanding = null;
+    if (axis === 'y' && b.vel.y >= 0) {
+      for (const s of statics) {
+        if (!s.semisolid || b.right <= s.left || b.left >= s.right) continue;
+        if (previousBottom <= s.top + semiLandingDepth && b.bottom >= s.top
+          && (!semiLanding || s.top < semiLanding.top)) semiLanding = s;
+      }
+    }
     for (const s of statics) {
+      if (axis === 'y' && s.semisolid) {
+        if (s === semiLanding) {
+          b.pos.y = s.top - b.h;
+          b.onGround = true;
+          b.vel.y = 0;
+        }
+        continue;
+      }
       if (!aabbOverlap(b, s)) continue;
       if (s.semisolid && axis === 'x') {
         if (steppedUp || b.vel.y < 0 || !(b.wasGround || b.onGround)) continue;
@@ -339,8 +342,6 @@ class PlatformerEngine {
         else b.pos.x = s.pos.x + s.w;
         b.vel.x = 0;
       } else {
-        // Land on top only
-        if (s.semisolid && (b.vel.y < 0 || previousBottom > s.top || b.bottom < s.top)) continue;
         const fromAbove = b.bottom - s.top; // top depth
         const fromBelow = s.bottom - b.top; // bottom depth
         if (b.vel.y > 0 || (b.vel.y === 0 && fromAbove <= fromBelow)) {
@@ -530,7 +531,7 @@ class PlatformerEngine {
         if (sp.tripped) continue;
         if (Math.abs(cx - sp.x) < 30 && feet > sp.y - 24 && feet < sp.y + 10) {
           sp.tripped = true;
-          this.hurtPlayer(30);
+          this.hurtPlayer(25);
           p.stunT = Math.max(p.stunT || 0, 3);
           if (this.onSpikeTrip) this.onSpikeTrip(sp);
           break;
@@ -656,10 +657,6 @@ class PlatformerEngine {
       }
       r.animTime += dt; // blink all
     }
-
-    // lean on slopes
-    if (p) this.updateTilt(p, dt);
-    for (const r of this.remotes) this.updateTilt(r, dt);
 
     // fell far
     if (p && !p.rocketing && p.pos.y > this.fallY && this.damageOn !== false) {

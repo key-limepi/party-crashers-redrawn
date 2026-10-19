@@ -30,11 +30,16 @@ async function netTick() {
             invis: p.invis === true, m1: K.m1ok !== false, peeling: SN.peeling === true, spinning: SN.spinning === true, spinwindup: !!SN.spinWindup,
             lift: TW.flying === true, super: SS.transformed === true, forming: !!SS.formUntil, holding: TW.holding === true, whipuntil: !!TW.whipUntil, kickUntil: !!T.kickUntil, jabUntil: !!T.jabUntil, throwUntil: !!TW.throwUntil,
             stunned: (p.stunT || 0) > 0, pull: Date.now() < K.pullUntil,
+            pulltarget: p.evil ? K.pullTarget : null,
             cower: (p.cowerT || 0) > 0, windup: !!L.prayUntil || !!K.windupUntil || !!SN.windupUntil || !!SN.spinWindup || !!K.pullWindup, pullwindup: !!K.pullWindup,
             dashing: NY.dashing,
             dtmult: isLux() ? (L.dt || 1) : 1, healmult: isLux() ? (L.heal || 1) : 1,
             praying: isLux() && !!L.prayUntil, rushing: isLux() && !!L.rushing, panting: isLux() && (!!L.panting || (p.hp ?? 0) > (p.maxHp ?? 100)),
             pose: (poseName && Date.now() < poseUntil) ? poseName : null,
+            fireball: isMario() && MU.fireballProjectile ? {
+              id: MU.fireballProjectile.id, x: MU.fireballProjectile.x, y: MU.fireballProjectile.y,
+              vx: MU.fireballProjectile.vx, vy: MU.fireballProjectile.vy,
+            } : null,
             anim: curAnim(p), m1v: p._m1v || 0, trail: !!(p.evil && game.fly),
           }),
         });

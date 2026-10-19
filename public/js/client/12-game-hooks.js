@@ -56,7 +56,7 @@
       const p = game.player;
       sneakShade.style.opacity = (p && p.evil && p.invis && p.alive !== false) ? 0.45 : 0;
       // sunset wash on green hill
-      sunsetShade.style.opacity = (game.activeMap === 'main' && game.mapId === 'greenhill') ? 0.16 : 0;
+      sunsetShade.style.opacity = (game.activeMap === 'main' && game.mapId === 'greenhill') ? 0.22 : 0;
       // walking feet loop
       if (p && p.alive !== false && p.onGround && Math.abs(p.vel.x) > 60) {
         stepLoop.rate(0.4 + Math.abs(p.vel.x) / 900); // slower steps

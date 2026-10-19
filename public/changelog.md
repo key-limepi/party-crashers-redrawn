@@ -1,5 +1,17 @@
 # changelog
 
+## v1.0
+- mario now uses his fall and stun sprites, with his animations transitioning correctly during play
+- uppercut is now a smaller, bouncing fireball that uses the fireball sprites and sound, stops at collisions, and stuns the killer on hit; multiplayer shots are synchronized
+- mario's fireball and spin cooldowns are 12 seconds on hit and 20 on miss, with the existing lms cooldown scaling
+- players stay upright on slopes, and semisolid platforms catch fast falls more reliably
+- evil lux's pull has less range, roots him while active, and ends if its target escapes; low damage shortens its cooldown
+- evil lux's rush and pull do less damage, while his movement speed stays unchanged and his m1 damage is restored to 30
+- lux's prayer effects are labeled above the abilities; overheal is now patch, gives lux 25 shield, and shares up to 50 shield evenly among nearby allies
+- patch uses the lux_healpatch sound; lux's prayer, run, and quieter panting sounds are also in
+- survivors see a red vignette when hit, and the killer sees a black vignette when stunned
+- green hill's sunset tint is stronger and more orange
+
 ## v0.94
 - keybinds!! open settings, theres a new "keys" section at the bottom
 - remap left/right/down/jump plus all 6 ability keys. click a key to remove it, hit + to add another one

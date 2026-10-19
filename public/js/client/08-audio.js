@@ -119,6 +119,12 @@
 
     // real sounds
     const SFX = './Assets/Sounds/';
+    const LUX_SFX = {
+      prayer: SFX + 'lux_prayer.mp3',
+      run: SFX + 'lux_run.mp3',
+      panting: SFX + 'lux_panting.mp3',
+      heal: SFX + 'lux_healpatch.mp3',
+    };
     const MARIO_JUMPS = [SFX + 'mario_jump.wav'];
     game.onJump = (dbl) => { const mario = typeof isMario === 'function' && isMario() && game.player && !game.player.evil; fileSfx(mario ? vpick(MARIO_JUMPS) : SFX + 'jump.wav', mario ? { rate: dbl ? 1.3 : 1, v: 0.3 } : { rate: dbl ? 1.3 : 1 }); };
     game.onHeal = (n) => {

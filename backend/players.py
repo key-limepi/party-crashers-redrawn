@@ -198,19 +198,26 @@ def overheal(h, data):
                 and data.get("id") in state.round_players):
             h.send_json({"ok": False, "reason": "nope!!"})
             return
-        if now - me.get("over_cd", 0) < OVERHEAL_CD:
-            h.send_json({"ok": False, "reason": "not ready!!"})
+        prayer = data.get("prayer")
+        cd_mult = 1.5 if prayer == "haste" else 0.7 if prayer == "burden" else 1.0
+        if state.lms_set:
+            cd_mult *= 0.6
+        requested_cooldown = OVERHEAL_CD * cd_mult
+        cooldown = me.get("over_cd_duration", requested_cooldown)
+        remaining = cooldown - (now - me.get("over_cd", 0))
+        if remaining > 0:
+            h.send_json({"ok": False, "reason": "not ready!!", "cooldown": remaining})
             return
         
         # lux self shield bonus
-        target_id = data.get("target")
-        if state.lms_set and target_id == me["id"]:
+        if state.lms_set:
             me["shield"] = me.get("shield", 0) + 25
             me["shield_next"] = now + 0.5
             me["over_cd"] = now
+            me["over_cd_duration"] = requested_cooldown
             me["st_healed"] = me.get("st_healed", 0) + 25
             print(f"!! {me['name']} LMS self-overhealed +25 shield!!", flush=True)
-            h.send_json({"ok": True, "target": me["id"], "name": me["name"], "shield": me["shield"], "lms_self": True})
+            h.send_json({"ok": True, "target": me["id"], "name": me["name"], "shield": me["shield"], "self_shield": me["shield"], "lms_self": True})
             return
         
         # neediest ally first, full last
@@ -231,15 +238,24 @@ def overheal(h, data):
             if best is None or need > best_need or (need == best_need and d2 < best_d2):
                 best, best_need, best_d2 = pid, need, d2
         if best is None:
-            h.send_json({"ok": False, "reason": "nobody around!!"})
+            me["over_cd"] = now
+            me["over_cd_duration"] = requested_cooldown
+            me["shield"] = me.get("shield", 0) + 25
+            me["shield_next"] = now + 0.5
+            me["st_healed"] = me.get("st_healed", 0) + 25
+            print(f"!! {me['name']} Patch self-healed +25 shield!!", flush=True)
+            h.send_json({"ok": True, "target": me["id"], "name": me["name"], "shield": me["shield"], "self_shield": me["shield"], "self_only": True})
             return
         me["over_cd"] = now # only wins cost cooldown
+        me["over_cd_duration"] = requested_cooldown
+        me["shield"] = me.get("shield", 0) + 25
+        me["shield_next"] = now + 0.5
         tgt = state.players[best]
         gave = OVERHEAL_BONUS - tgt.get("shield", 0) # applied only
         tgt["shield"] = OVERHEAL_BONUS # topped up blue hp
         tgt["shield_next"] = now + 0.5
-        me["st_healed"] = me.get("st_healed", 0) + max(0, gave)
+        me["st_healed"] = me.get("st_healed", 0) + 25 + max(0, gave)
         print(f"!! {me['name']} overhealed {tgt['name']}!!", flush=True)
-        h.send_json({"ok": True, "target": best, "name": tgt["name"], "shield": tgt["shield"]})
+        h.send_json({"ok": True, "target": best, "name": tgt["name"], "shield": tgt["shield"], "self_shield": me["shield"]})
     return
 

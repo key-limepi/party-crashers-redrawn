@@ -33,8 +33,7 @@
         if (pose === 'boost') return superSprites.boost[0];
         if (pose === 'block') return superSprites.guard;
       } else if (char === 'mario') {
-        if (pose === 'uppercharge') return marioSprites.uppercharge[0];
-        if (pose === 'uppercut') return marioSprites.upper[0];
+        if (pose === 'fireball') return marioSprites.fireballThrow[0];
         if (pose === 'spin') return marioSprites.spin[0];
       } else {
         if (pose === 'dash') return luxDash;
@@ -52,7 +51,9 @@
       p.whipUntil = false; p.throwUntil = false;
       p.fatigue = 0; p.actionT = 0; p._wore = null;
       game.moveSpeed = 240; // base speed
-      K.charging = false; K.pullUntil = 0; K.pullWindup = 0; K.windupUntil = 0;
+      K.charging = false; K.pullUntil = 0; K.pullWindup = 0; K.pullTarget = null; K.pullEnding = false;
+      K.pullDamage = 0; K.pullPending = 0; K.pullCastAt = 0; K.pullLastHitAt = 0; K.pullSequence++;
+      K.windupUntil = 0;
       K.spikeCD = 0; K.sneakCD = 0; K.pullCD = 0; K.rushCD = 0; K.m1CD = 0;
       K.penaltyUntil = 0; K.invisUntil = 0; K.pullHit = false;
       S.windupUntil = 0; S.dashing = false;
@@ -65,7 +66,9 @@
       p.praying = false; p.rushing = false; p.panting = false;
       T.kickUntil = 0; T.jabUntil = 0;
       T.kickCD = 0; T.jabCD = 0; T.kickHit = false; T.jabHit = false;
-      MU.upperCD = 0; MU.windupUntil = 0; MU.upperUntil = 0; MU.upperHit = false;
+      MU.fireballCD = 0; MU.fireballUntil = 0; MU.fireballLaunchAt = 0;
+      if (MU.fireballProjectile) game.marioFireballs = (game.marioFireballs || []).filter((f) => f !== MU.fireballProjectile);
+      MU.fireballProjectile = null; MU.fireballPending = false;
       MU.spinCD = 0; MU.spinUntil = 0; MU.spinHit = false; MU.spinUsed = false;
       SN.windupUntil = 0; SN.peelUntil = 0; SN.peeling = false;
       SN.spinWindup = 0; SN.spinUntil = 0; SN.spinning = false;
@@ -110,9 +113,10 @@
       kickCD: 0, jabCD: 0, kickUntil: 0, kickHit: false,
       jabUntil: 0, jabHit: false,
     };
-    // mario uppercut kit
+    // mario fireball and spin kit
     const MU = {
-      upperCD: 0, windupUntil: 0, upperUntil: 0, upperStart: 0, upperHit: false,
+      fireballCD: 0, fireballUntil: 0, fireballLaunchAt: 0,
+      fireballProjectile: null, fireballPending: false,
       spinCD: 0, spinUntil: 0, spinHit: false, spinUsed: false,
     };
     game.onUpdate = () => {

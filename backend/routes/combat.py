@@ -45,7 +45,10 @@ def hit(h, data):
                 h.send_json({"ok": True})
                 return
             # wide swings
-            reach = 140 if stun <= 0 else 95
+            # Mario's fireball follows the map geometry and the client reports
+            # the confirmed collision; bound range to the playable map scale.
+            fireball_hit = bool(data.get("fireball")) and not atk_evil and atk.get("char") == "mario"
+            reach = 4500 if fireball_hit else (140 if stun <= 0 else 95)
             dx = vic.get("x", 0) - k.get("x", 0)
             dy = vic.get("y", 0) - k.get("y", 0)
             if dx * dx + dy * dy < reach * reach:
@@ -122,7 +125,7 @@ def hit(h, data):
                                            "dmg": landed, "stun": round(float(stun), 2), "at": now})
                         del state.hits[:-12]
                     print(f"!! {k['name']} hit {vic['name']} for {dmg}!!", flush=True)
-                    h.send_json({"ok": True})
+                    h.send_json({"ok": True, "landed": landed})
                     return
     h.send_json({"ok": False})
     return

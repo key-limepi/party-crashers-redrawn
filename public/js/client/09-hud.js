@@ -1,13 +1,17 @@
     // evil kit
     // weak pull
     // wound ticking ropes
-    const PULL_RANGE = 450;
+    const PULL_RANGE = 350;
+    const EVIL_HP = 220;
+    const EVIL_SPEED = 300;
+    const EVIL_SNEAK_SPEED = 430;
     // lms buffs
     const LMS_HP = 150; // more health
     const LMS_CD = 0.6; // faster cds
     const K = {
       spikeCD: 0, sneakCD: 0, pullCD: 0, rushCD: 0, m1CD: 0, m1ok: true,
       invisUntil: 0, penaltyUntil: 0, pullUntil: 0, pullHit: false, pullWindup: 0,
+      pullTarget: null, pullCastAt: 0, pullDamage: 0, pullPending: 0, pullSequence: 0, pullEnding: false, pullLastHitAt: 0,
       windupUntil: 0, chargeUntil: 0, charging: false,
     };
     const trippedIds = new Set(); // used spikes
@@ -98,6 +102,13 @@
     }
     // blank slots
     const AB = './Assets/Images/UI/Abilities/';
+    const PRAY_EFFECT = {
+      grace: '+HEAL',
+      haste: '+SPD, +CD',
+      shelter: '-SPD, -DMG',
+      burden: '-SPD, -CD',
+      frailty: '+SPD, +DMG',
+    };
     const ABIL_ICONS = {
       hit: null,
       blank: AB + 'ability_blank.png',
@@ -168,14 +179,14 @@
         ];
       } else if (isMario()) {
         abilDefs = [
-          { key: 'Z', name: 'UPPERCUT', icon: null, cd: () => MU.upperCD },
+          { key: 'Z', name: 'FIREBALL', icon: null, cd: () => MU.fireballCD },
           { key: 'X', name: 'SPIN', icon: null, cd: () => MU.spinCD },
         ];
       } else {
         abilDefs = [
           { key: 'Z', name: 'PRAY', icon: ABIL_ICONS.pray, cd: () => L.prayCD },
           { key: 'X', name: 'ADRENALINE', icon: ABIL_ICONS.adrenaline, cd: () => L.adCD },
-          { key: 'C', name: 'OVERHEAL', icon: ABIL_ICONS.overheal, cd: () => L.overCD },
+          { key: 'C', name: 'PATCH', icon: ABIL_ICONS.overheal, cd: () => L.overCD },
         ];
       }
       abilBar.innerHTML = '';
@@ -207,9 +218,9 @@
         p.char = bear ? 'bear5' : 'evil';
         game.setPlayerSprites(bear ? bear5Sprites : evilSprites);
         p.drawW = bear ? 76 : 50; p.drawH = bear ? 94 : 70; // full size
-        p.maxHp = bear ? 999 : 250; p.hp = bear ? 999 : 250;
+        p.maxHp = bear ? 999 : EVIL_HP; p.hp = bear ? 999 : EVIL_HP;
         p.maxJumps = 2;
-        game.moveSpeed = bear ? 820 : 300; // evil speed
+        game.moveSpeed = bear ? 820 : EVIL_SPEED; // evil speed
         // bear5 fast no fly
         game.fly = false;
         game.noclip = false;
@@ -248,13 +259,14 @@
           d.el.querySelector('.abName').textContent = `${bindLabel(game.input, 'C')} ${p.invis ? 'CANCEL' : 'SNEAK'}`;
         }
       }
-      // lux prayer tag, bottom left
+      // lux prayer tag, above abilities
       const prayEl = document.getElementById('prayLabel');
       if (prayEl) {
         if (!p.evil && isLux() && L.prayer && p.alive !== false) {
-          prayEl.textContent = `prayer of ${L.prayer}`;
+          prayEl.querySelector('.prayEffect').textContent = PRAY_EFFECT[L.prayer] || '';
+          prayEl.querySelector('.prayName').textContent = `prayer of ${L.prayer}`;
           prayEl.style.color = PRAY_COL[L.prayer] || '#fff';
-          if (prayEl.style.display !== 'block') prayEl.style.display = 'block';
+          if (prayEl.style.display !== 'flex') prayEl.style.display = 'flex';
         } else if (prayEl.style.display !== 'none') {
           prayEl.style.display = 'none';
         }

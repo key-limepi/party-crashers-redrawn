@@ -509,6 +509,8 @@ def _tick_round(now):
                 if len(survs) == 1 and not state.lms_set:
                     # death duel
                     state.lms_set = True
+                    if survs[0] in players:
+                        players[survs[0]]["over_cd"] = 0.0 # patch cooldown resets with the LMS buffs
                     _lc = players.get(survs[0], {}).get("char")
                     state.phase_end = now + LMS_DURATIONS.get(_lc, 105.117)
                     state.lms_notice_until = now + 5

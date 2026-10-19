@@ -68,6 +68,7 @@
             p.rooted = true;
             p.actionImg = luxSprites.pray[0]; p.actionT = 0.15;
             sayStatus('praying...', 2);
+            fileSfx(LUX_SFX.prayer, { v: 0.32 });
           } else if (ab === 'X' && now >= L.adCD && !L.prayUntil && !L.rushing && !L.panting) {
             // adrenaline sprint, locked line
             L.rushing = true; L.adUntil = now + 6000;
@@ -75,37 +76,48 @@
             p.chargeDir = L.adDir; p.facing = L.adDir;
             p.chargeSpeed = 750 * (PRAY_SPD[L.prayer] || 1); // peelout pace
             p.rooted = false;
-            fileSfx(SFX + 'super_dash.wav', {});
+            fileSfx(LUX_SFX.run, { v: 0.45 });
           } else if (ab === 'C' && now >= L.overCD && !L.overBusy && !L.prayUntil && !L.rushing && !L.panting && data.phase === 'round') {
             // overheal ally or self
             L.overBusy = true;
             p.actionImg = luxSprites.pray[0]; p.actionT = 0.4;
-            const targetId = data.lms_set ? net.id : null; // self target in lms
+            const targetId = (data.lms || data.lms_set) ? net.id : null; // self target in lms
             fetch('/api/overheal', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: net.id, target: targetId }),
+              body: JSON.stringify({ id: net.id, target: targetId, prayer: L.prayer }),
             }).then((r) => r.json()).then((d) => {
               L.overBusy = false;
               if (d && d.ok) {
                 L.overCD = Date.now() + 13500 * luxCdMult();
-                sayStatus(d.lms_self ? 'LMS self-overheal +25 shield!!' : `overhealed ${d.name}!!`, 3);
-                fileSfx(SFX + 'dash_release.wav', {});
+                if (Number.isFinite(d.self_shield)) p.shield = d.self_shield;
+                else if (d.lms_self) p.shield = d.shield || 0;
+                const patchedNames = Array.isArray(d.targets) ? d.targets.map((target) => target.name).join(', ') : d.name;
+                sayStatus(d.lms_self || d.self_only ? 'Patch gave you +25 shield!!' : `patched ${patchedNames} and gave you +25 shield!!`, 3);
+                setPose('patch', 500);
+                fileSfx(LUX_SFX.heal, { v: 0.48 });
                 // holy shock here
                 game.luxGlow(p.pos.x + p.w / 2, p.pos.y + p.h / 2, '#5ff2ff', 3, 90);
                 // empower burst there
-                const tgt = game.remotes.find((r) => r.id === d.target);
-                if (tgt) game.luxGlow(tgt.pos.x + tgt.w / 2, tgt.pos.y + tgt.h / 2, '#ffd23f', 6, 130);
-                // mark the target for lux
-                game.bubbles[d.target] = { text: 'OVERHEAL!!', until: Date.now() + 2000 };
+                const targetIds = Array.isArray(d.targets) ? d.targets.map((target) => target.id) : [d.target];
+                for (const targetId of targetIds) {
+                  const tgt = game.remotes.find((r) => r.id === targetId);
+                  if (tgt) game.luxGlow(tgt.pos.x + tgt.w / 2, tgt.pos.y + tgt.h / 2, '#ffd23f', 6, 130);
+                  game.bubbles[targetId] = { text: 'PATCH!!', until: Date.now() + 2000 };
+                }
               } else {
+                if (Number.isFinite(d && d.cooldown) && d.cooldown > 0) {
+                  L.overCD = Math.max(L.overCD, Date.now() + d.cooldown * 1000);
+                  sayStatus('patch recharging!!', 2);
+                  return;
+                }
                 // failed casts cost nothing
-                sayStatus(d && d.reason ? d.reason : 'overheal failed!!', 2);
+                sayStatus(d && d.reason ? d.reason : 'patch failed!!', 2);
                 fileSfx(SFX + 'denied.wav', {});
               }
             }).catch(() => {
               L.overBusy = false;
-              sayStatus('overheal lost the server!!', 2);
+              sayStatus('patch lost the server!!', 2);
             });
           }
           continue;
@@ -166,14 +178,19 @@
         } else if (ab === 'V' && now >= K.pullCD && !K.pullWindup) {
           // wound up ropes
           const kx = p.pos.x + p.w / 2, ky = p.pos.y + p.h / 2;
-          const anyone = game.remotes.some((r) => {
-            if (r.evil || !r.alive || r.hp <= 0) return false;
+          const target = game.remotes.map((r) => {
+            if (r.evil || !r.alive || r.hp <= 0) return null;
             const rx = r.pos.x + r.w / 2, ry = r.pos.y + r.h / 2;
-            return Math.hypot(kx - rx, ky - ry) < PULL_RANGE;
-          });
-          K.pullCD = now + (anyone ? 22000 : 8000);
+            const distance = Math.hypot(kx - rx, ky - ry);
+            return distance < PULL_RANGE ? { player: r, distance } : null;
+          }).filter(Boolean).sort((a, b) => a.distance - b.distance)[0]?.player;
+          K.pullTarget = target?.id || null;
+          K.pullCastAt = now;
+          K.pullDamage = 0; K.pullPending = 0; K.pullEnding = false; K.pullLastHitAt = 0;
+          K.pullSequence++;
+          K.pullCD = now + (target ? 22000 : 8000);
           K.pullHit = false;
-          if (!anyone) {
+          if (!target) {
             // drop ropes
             p.stunT = Math.max(p.stunT || 0, 3);
             fileSfx(SFX + 'denied.wav', {});
@@ -199,6 +216,25 @@
       Object.assign(t, { now });
     }
 
+    function finishEvilPullCooldown() {
+      if (!K.pullEnding || K.pullPending > 0) return;
+      if (K.pullDamage < 25) K.pullCD = Math.min(K.pullCD, K.pullCastAt + 12000);
+      K.pullEnding = false;
+      K.pullTarget = null;
+    }
+
+    function stopEvilPull(p) {
+      K.pullUntil = 0;
+      K.pullWindup = 0;
+      K.pullEnding = true;
+      p.rooted = false;
+      p.vel.x = 0;
+      if (p.actionImg === evilAct.pull || p.actionImg === evilAct.pullwindup) {
+        p.actionImg = null; p.actionT = 0;
+      }
+      finishEvilPullCooldown();
+    }
+
     function tickEvilKit(t) {
       let { p, data, now } = t;
       // mute over
@@ -210,6 +246,12 @@
       if (K.wasInvis && !p.invis) fileSfx(SFX + 'sneak_reveal.mp3', {});
       if (K.wasInvis && !p.invis) sneakLoop.stop();
       K.wasInvis = !!p.invis;
+      if (p.evil && (K.pullWindup || K.pullUntil)) {
+        const target = game.remotes.find((r) => r.id === K.pullTarget && !r.evil && r.alive && r.hp > 0);
+        const dx = target ? target.pos.x + target.w / 2 - (p.pos.x + p.w / 2) : 0;
+        const dy = target ? target.pos.y + target.h / 2 - (p.pos.y + p.h / 2) : 0;
+        if (!target || Math.hypot(dx, dy) >= PULL_RANGE) stopEvilPull(p);
+      }
       if (p.evil && p.alive !== false && now < K.pullUntil) { p.actionImg = evilAct.pull; p.actionT = 0.15; pullLoop.start(); }
       else pullLoop.stop();
       // wound up
@@ -218,11 +260,13 @@
         p.rooted = false;
         if (p.alive !== false && (p.stunT || 0) <= 0 && data.phase === 'round') {
           K.pullUntil = now + 5000;
+        } else {
+          stopEvilPull(p);
         }
       }
       // fizzled pull
       if (p.evil && K.pullUntil && now >= K.pullUntil && p.alive !== false) {
-        K.pullUntil = 0;
+        stopEvilPull(p);
         if (!K.pullHit) {
           p.stunT = Math.max(p.stunT || 0, 3);
           fileSfx(SFX + 'denied.wav', {});
@@ -263,7 +307,7 @@
               fetch('/api/hit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: net.id, victim: r.id, dmg: 60, stun: 0 }),
+                body: JSON.stringify({ id: net.id, victim: r.id, dmg: 50, stun: 0 }),
               }).catch(() => {});
               fileSfx(SFX + 'm1_hit.wav', { rate: 0.7 }); // slam sound
               hitBurst(r.pos.x + r.w / 2, r.pos.y + r.h / 2, true, true); // slam chunks
@@ -284,33 +328,47 @@
       // evil waits
       if (p.evil) {
         if (data.grace) p.rooted = true;
+        else if (now < K.pullUntil) { p.rooted = true; p.vel.x = 0; }
         else if (!K.windupUntil && !K.charging && !K.pullWindup) p.rooted = false;
       }
       // rope ticks
       if (p.evil && p.alive !== false && data.phase === 'round' && now < K.pullUntil) {
         const kx = p.pos.x + p.w / 2, ky = p.pos.y + p.h / 2;
-        for (const r of game.remotes) {
-          if (r.evil || !r.alive || r.hp <= 0) continue;
+        const r = game.remotes.find((b) => b.id === K.pullTarget && !b.evil && b.alive && b.hp > 0);
+        if (r) {
           const rx = r.pos.x + r.w / 2, ry = r.pos.y + r.h / 2;
           const pullD = Math.hypot(kx - rx, ky - ry);
-          if (pullD >= PULL_RANGE) continue;
-          // through walls now
-          if (!K.pullHit) {
-            fileSfx(SFX + 'basic_hit.wav', {}); voiceSfx(vpick(VL_PULL));
-            hitBurst(rx, ry, false, true); // rope catch
-          } // caught one
-          K.pullHit = true;
-          // closer burns more
-          const tickDmg = Math.round(2 + 6 * (1 - pullD / PULL_RANGE));
-          fetch('/api/hit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: net.id, victim: r.id, dmg: tickDmg, stun: 0 }),
-          }).catch(() => {});
+          if (pullD >= PULL_RANGE) stopEvilPull(p);
+          else {
+            // through walls now
+            if (!K.pullHit) {
+              fileSfx(SFX + 'basic_hit.wav', {}); voiceSfx(vpick(VL_PULL));
+              hitBurst(rx, ry, false, true); // rope catch
+            } // caught one
+            K.pullHit = true;
+            // closer burns more
+            if (now - K.pullLastHitAt >= 1100) {
+              K.pullLastHitAt = now;
+              const tickDmg = Math.round(1 + 5 * (1 - pullD / PULL_RANGE));
+              const seq = K.pullSequence;
+              K.pullPending++;
+              fetch('/api/hit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: net.id, victim: r.id, dmg: tickDmg, stun: 0 }),
+              }).then((response) => response.json()).then((result) => {
+                if (K.pullSequence === seq && result.ok) K.pullDamage += Math.max(0, Number(result.landed) || 0);
+              }).catch(() => {}).finally(() => {
+                if (K.pullSequence !== seq) return;
+                K.pullPending = Math.max(0, K.pullPending - 1);
+                finishEvilPullCooldown();
+              });
+            }
+          }
         }
       }
       // fast ghost
-      if (p.evil) game.moveSpeed = isBear5() ? 820 : p.invis ? 430 : 300;
+      if (p.evil) game.moveSpeed = isBear5() ? 820 : p.invis ? EVIL_SNEAK_SPEED : EVIL_SPEED;
     }
 
     function tickLux(t) {
@@ -364,6 +422,7 @@
             L.rushing = false; L.panting = true; L.pantUntil = now + 3000;
             p.chargeDir = 0; p.chargeSpeed = 0; p.rooted = true;
             game.luxGlow(pcx, pcy, '#ffffff', 4, 130); // skid stop
+            if (p.alive !== false) fileSfx(LUX_SFX.panting, { v: 0.16 });
           } else {
             if (game.input.left) { p.facing = -1; p.chargeDir = -1; }
             else if (game.input.right) { p.facing = 1; p.chargeDir = 1; }
@@ -811,58 +870,62 @@
 
     function tickMario(t) {
       let { p, isLMS, now } = t;
-      // rising uppercut
+      // Mario's fireball and spin
       if (!p.evil && isMario()) {
         const ek = game.remotes.find((r) => r.id === net.ekid && r.alive && r.hp > 0);
         const ekClose = (dx, dy) => ek &&
           Math.abs(ek.pos.x - p.pos.x) < dx &&
           Math.abs((ek.pos.y + ek.h / 2) - (p.pos.y + p.h / 2)) < dy;
-        // charged blast
-        if (MU.windupUntil) {
-          p.actionImg = marioSprites.uppercharge[Math.min(2, Math.floor((now - (MU.windupUntil - 1000)) / 333))]; p.actionT = 0.15;
-          if (now >= MU.windupUntil || p.alive === false || (p.stunT || 0) > 0) {
-            MU.windupUntil = 0;
-            p.actionImg = null; p.actionT = 0;
-            if (p.alive !== false && (p.stunT || 0) <= 0) {
-              // blast up
-              p.rooted = false;
-              p.vel.x = 0;
-              p.vel.y = -1050;
-              p.onGround = false;
-              p.noCutUntil = game.time + 1.2; // keep full arc
-              MU.upperStart = now;
-              MU.upperUntil = now + 1200;
-              MU.upperHit = false;
-              setPose('uppercut', 1200);
-              fileSfx(SFX + 'uppercut_release.wav', {});
-            } else {
-              // broken charge
-              MU.upperCD = now + 27000 * (isLMS ? LMS_CD : 1);
-              p.rooted = false;
-              fileSfx(SFX + 'denied.wav', {});
-            }
-          }
-        } else if (MU.upperUntil) {
-          // touch killer
-          p.actionImg = marioSprites.upper[Math.min(1, Math.floor((now - (MU.upperStart || now)) / 600))]; p.actionT = 0.15;
-          const landed = p.onGround && now > (MU.upperStart || 0) + 100;
-          if (!MU.upperHit && ekClose(60, 90)) {
-            MU.upperHit = true;
-            MU.upperUntil = 0;
-            p.actionImg = null; p.actionT = 0;
-            MU.upperCD = now + 18000 * (isLMS ? LMS_CD : 1); // hit waits
-            fileSfx(SFX + 'roundhouse_hit.wav', {});
-            hitBurst(ek.pos.x + ek.w / 2, ek.pos.y + ek.h / 2, false, false);
-            fetch('/api/hit', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: net.id, victim: ek.id, dmg: 15, stun: 4, up: 1200, vert: true, kbforce: true }),
-            }).catch(() => {});
-          } else if (now >= MU.upperUntil || landed || p.alive === false || (p.stunT || 0) > 0) {
-            MU.upperUntil = 0;
-            p.actionImg = null; p.actionT = 0;
-            MU.upperCD = now + 27000 * (isLMS ? LMS_CD : 1); // slow whiff
-            if (p.alive !== false) fileSfx(SFX + 'denied.wav', {}); // missed upper
+        if (MU.fireballUntil && now < MU.fireballUntil && p.alive !== false && (p.stunT || 0) <= 0) {
+          const age = now - (MU.fireballUntil - 650);
+          p.actionImg = marioSprites.fireballThrow[Math.min(marioSprites.fireballThrow.length - 1, Math.floor(age / 80))];
+          p.actionT = 0.15;
+        } else if (MU.fireballUntil) {
+          MU.fireballUntil = 0;
+          p.rooted = false;
+          if (p.actionImg && marioSprites.fireballThrow.includes(p.actionImg)) { p.actionImg = null; p.actionT = 0; }
+        }
+        if (MU.fireballPending && !MU.fireballProjectile && MU.fireballLaunchAt && now >= MU.fireballLaunchAt && p.alive !== false && (p.stunT || 0) <= 0) {
+          const dir = MU.fireballDir || p.facing || 1;
+          const x = p.pos.x + p.w / 2 + dir * (p.w / 2 + 9);
+          const y = p.pos.y + p.h - 9;
+          MU.fireballProjectile = {
+            id: `${net.id}-${now}`, x, y, vx: dir * 480, vy: -260,
+            age: 0, lastStepAt: now, stepRemainder: 0, start: now,
+            owner: net.id, mine: true,
+          };
+          (game.marioFireballs ||= []).push(MU.fireballProjectile);
+          MU.fireballLaunchAt = 0;
+        } else if (MU.fireballLaunchAt && now >= MU.fireballLaunchAt && (p.alive === false || (p.stunT || 0) > 0)) {
+          MU.fireballLaunchAt = 0;
+          MU.fireballUntil = 0;
+          MU.fireballCD = now + 20000 * (isLMS ? LMS_CD : 1);
+          MU.fireballPending = false;
+          p.rooted = false;
+        }
+        const shot = MU.fireballProjectile;
+        if (shot) {
+          const elapsed = Math.max(0, Math.min(1.5, (now - shot.lastStepAt) / 1000));
+          shot.lastStepAt = now;
+          const result = game.stepMarioFireball(shot, elapsed, ek);
+          if (result.hit || result.expired || p.alive === false) {
+            MU.fireballProjectile = null;
+            game.marioFireballs = game.marioFireballs.filter((f) => f !== shot);
+            const finish = (landed) => {
+              MU.fireballCD = Date.now() + (landed ? 12000 : 20000) * (isLMS ? LMS_CD : 1);
+              MU.fireballPending = false;
+              MU.fireballLaunchAt = 0;
+            };
+            if (result.hit) {
+              hitBurst(ek.pos.x + ek.w / 2, ek.pos.y + ek.h / 2, false, false);
+              fetch('/api/hit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: net.id, victim: ek.id, dmg: 0, stun: 3, fireball: true }),
+              }).then((response) => response.json()).then((result) => finish(!!result.ok)).catch(() => finish(false));
+            } else finish(false);
+          } else {
+            shot.syncedAt = now;
           }
         }
         // fresh air, fresh spin
@@ -873,6 +936,7 @@
           if (!MU.spinHit && ekClose(60, 80)) {
             MU.spinHit = true;
             MU.spinUntil = 0;
+            MU.spinCD = now + 12000 * (isLMS ? LMS_CD : 1);
             p.actionImg = null; p.actionT = 0;
             fileSfx(SFX + 'basic_hit.wav', {});
             hitBurst(ek.pos.x + ek.w / 2, ek.pos.y + ek.h / 2, false, false);
@@ -883,6 +947,7 @@
             }).catch(() => {});
           } else if (now >= MU.spinUntil || p.onGround || p.alive === false || (p.stunT || 0) > 0) {
             MU.spinUntil = 0;
+            MU.spinCD = now + (MU.spinHit ? 12000 : 20000) * (isLMS ? LMS_CD : 1);
             p.actionImg = null; p.actionT = 0;
           }
         }
@@ -1020,6 +1085,8 @@
           const kx = pl.pos.x + pl.w / 2, ky = pl.pos.y + pl.h / 2;
           for (const vc of victims) {
             if (vc === pl) continue;
+            const targetId = pl === p ? K.pullTarget : pl.pullTarget;
+            if (!targetId || vc.id !== targetId) continue;
             const mx = vc.pos.x + vc.w / 2, my = vc.pos.y + vc.h / 2;
             if (Math.hypot(kx - mx, ky - my) < PULL_RANGE) {
               game.pullLinks.push({ x1: mx, y1: my, x2: kx, y2: ky });

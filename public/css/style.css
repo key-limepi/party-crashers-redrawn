@@ -279,6 +279,9 @@
       opacity: 0;
       transition: opacity 0.4s;
     }
+    #hurtFlash.black {
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.78) 100%);
+    }
     #vignette {
       position: absolute;
       inset: 0;
@@ -565,11 +568,14 @@
       50% { filter: hue-rotate(180deg); }
       75% { filter: hue-rotate(270deg); }
     }
-    /* lux prayer tag, bottom left */
+    /* lux prayer tag, above ability bar */
     #prayLabel {
       position: absolute;
-      left: 12px;
-      bottom: 12px;
+      right: 12px;
+      bottom: 112px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
       font-size: clamp(13px, 2.6vh, 22px);
       letter-spacing: 2px;
       -webkit-text-stroke: 1px #1a1b26;
@@ -577,6 +583,11 @@
       pointer-events: none;
       line-height: normal;
       z-index: 40;
+    }
+    #prayLabel .prayEffect {
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: #fff;
     }
     @keyframes win-pop {
       from { opacity: 0; transform: scale(0.6); }

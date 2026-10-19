@@ -2,6 +2,7 @@
 
 import secrets
 import time
+import math
 
 from .. import state
 from ..admins import is_admin
@@ -57,6 +58,7 @@ def join(h, data):
             "alive": True, "invis": False, "m1": True,
             "stunned": False, "pull": False, "away": False, "cower": False,
             "windup": False, "pose": None, "dashing": False, "stun_until": 0,
+            "fireball": None,
             "hp_ack": 100, # last hp it told us
             "shield": 0, # blue bonus hp
             "shield_next": 0.0, # drain tick
@@ -78,6 +80,24 @@ def state_post(h, data):
             for key in STATE_KEYS:
                 if key in data:
                     pl[key] = data[key]
+            if "fireball" in data:
+                fb = data.get("fireball")
+                if isinstance(fb, dict) and pl.get("char") == "mario" and state.phase == "round":
+                    try:
+                        x, y = float(fb["x"]), float(fb["y"])
+                        vx, vy = float(fb["vx"]), float(fb["vy"])
+                        if all(math.isfinite(v) and abs(v) <= 10000 for v in (x, y, vx, vy)):
+                            pl["fireball"] = {
+                                "id": str(fb.get("id", ""))[:32],
+                                "x": round(x, 1), "y": round(y, 1),
+                                "vx": round(vx, 1), "vy": round(vy, 1),
+                            }
+                        else:
+                            pl["fireball"] = None
+                    except (KeyError, TypeError, ValueError):
+                        pl["fireball"] = None
+                else:
+                    pl["fireball"] = None
             # anim is just a short name, keep it small
             if not isinstance(pl.get("anim"), str):
                 pl["anim"] = None
@@ -196,23 +216,31 @@ def overheal(h, data):
                 and data.get("id") in state.round_players):
             h.send_json({"ok": False, "reason": "nope!!"})
             return
-        if now - me.get("over_cd", 0) < OVERHEAL_CD:
-            h.send_json({"ok": False, "reason": "not ready!!"})
+        prayer = data.get("prayer")
+        cd_mult = 1.5 if prayer == "haste" else 0.7 if prayer == "burden" else 1.0
+        if state.lms_set:
+            cd_mult *= 0.6
+        requested_cooldown = OVERHEAL_CD * cd_mult
+        cooldown = me.get("over_cd_duration", requested_cooldown)
+        remaining = cooldown - (now - me.get("over_cd", 0))
+        if remaining > 0:
+            h.send_json({"ok": False, "reason": "not ready!!", "cooldown": remaining})
             return
         
         # lux self shield bonus
-        target_id = data.get("target")
-        if state.lms_set and target_id == me["id"]:
+        if state.lms_set:
             me["shield"] = me.get("shield", 0) + 25
             me["shield_next"] = now + 0.5
             me["over_cd"] = now
+            me["over_cd_duration"] = requested_cooldown
             me["st_healed"] = me.get("st_healed", 0) + 25
             print(f"!! {me['name']} LMS self-overhealed +25 shield!!", flush=True)
-            h.send_json({"ok": True, "target": me["id"], "name": me["name"], "shield": me["shield"], "lms_self": True})
+            h.send_json({"ok": True, "target": me["id"], "name": me["name"], "shield": me["shield"], "self_shield": me["shield"], "lms_self": True})
             return
         
-        # neediest ally first, full last
-        best, best_need, best_d2 = None, 0, 0
+        # Lux always gains 25 shield; share the 50 point Patch bonus evenly
+        # across nearby survivors who can still receive shield.
+        nearby = []
         for pid, pl in state.players.items():
             if pid == data.get("id") or pid not in state.round_players:
                 continue
@@ -223,21 +251,57 @@ def overheal(h, data):
             d2 = dx * dx + dy * dy
             if d2 > OVERHEAL_RADIUS * OVERHEAL_RADIUS:
                 continue
-            need = pl.get("maxhp", 100) + OVERHEAL_BONUS - pl.get("hp", 100) - pl.get("shield", 0)
-            if need <= 0:
+            capacity = max(0, OVERHEAL_BONUS - pl.get("shield", 0))
+            if capacity <= 0:
                 continue
-            if best is None or need > best_need or (need == best_need and d2 < best_d2):
-                best, best_need, best_d2 = pid, need, d2
-        if best is None:
-            h.send_json({"ok": False, "reason": "nobody around!!"})
-            return
+            nearby.append((pid, pl, capacity))
+
         me["over_cd"] = now # only wins cost cooldown
-        tgt = state.players[best]
-        gave = OVERHEAL_BONUS - tgt.get("shield", 0) # applied only
-        tgt["shield"] = OVERHEAL_BONUS # topped up blue hp
-        tgt["shield_next"] = now + 0.5
-        me["st_healed"] = me.get("st_healed", 0) + max(0, gave)
-        print(f"!! {me['name']} overhealed {tgt['name']}!!", flush=True)
-        h.send_json({"ok": True, "target": best, "name": tgt["name"], "shield": tgt["shield"]})
+        me["over_cd_duration"] = requested_cooldown
+        me["shield"] = me.get("shield", 0) + 25
+        me["shield_next"] = now + 0.5
+        targets = {}
+        remaining = OVERHEAL_BONUS
+        active = nearby[:]
+        # Water-fill the bonus so capped survivors' unused share is redistributed.
+        while remaining > 0 and active:
+            base, extra = divmod(remaining, len(active))
+            applied_total = 0
+            next_active = []
+            for index, (pid, pl, capacity) in enumerate(active):
+                share = base + (1 if index < extra else 0)
+                applied = min(capacity, share, remaining - applied_total)
+                if applied > 0:
+                    pl["shield"] = pl.get("shield", 0) + applied
+                    pl["shield_next"] = now + 0.5
+                    applied_total += applied
+                    if pid in targets:
+                        targets[pid]["shield"] = pl["shield"]
+                        targets[pid]["given"] += applied
+                    else:
+                        targets[pid] = {"id": pid, "name": pl["name"], "shield": pl["shield"], "given": applied}
+                if capacity > applied:
+                    next_active.append((pid, pl, capacity - applied))
+            if applied_total == 0:
+                break
+            remaining -= applied_total
+            active = next_active
+
+        target_list = list(targets.values())
+        gave = sum(target["given"] for target in target_list)
+        me["st_healed"] = me.get("st_healed", 0) + 25 + gave
+        names = ", ".join(target["name"] for target in target_list)
+        print(f"!! {me['name']} patched {names or 'themself'} (+{gave} shared shield)!!", flush=True)
+        response = {
+            "ok": True,
+            "target": target_list[0]["id"] if target_list else me["id"],
+            "name": names or me["name"],
+            "targets": target_list,
+            "shield": target_list[0]["shield"] if target_list else me["shield"],
+            "self_shield": me["shield"],
+        }
+        if not target_list:
+            response["self_only"] = True
+        h.send_json(response)
     return
 

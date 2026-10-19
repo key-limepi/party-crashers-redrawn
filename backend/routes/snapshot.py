@@ -64,6 +64,7 @@ def players_snapshot(h, url):
             "vote_counts": vote_counts,
             "my_vote": my_vote,
             "phase": state.phase,
+            "lms": bool(state.lms_set),
             "time_left": max(0, int(state.phase_end - now)) if state.phase != "lobby" else 0,
             "grace": state.phase == "round" and now < state.round_start + GRACE_TIME,
             "killer_id": state.killer_id,

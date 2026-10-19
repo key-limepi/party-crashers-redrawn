@@ -6,7 +6,7 @@
 desc: placeholder
 move: Z | PRAY | kneel, gain a random prayer
 move: X | ADRENALINE | 6s sprint, then pant
-move: C | OVERHEAL | +50 shield to neediest ally
+move: C | PATCH | +25 shield to Lux, shares +50 among nearby allies
 passive: converting near hurt allies slows you
 
 [toko]
@@ -39,9 +39,9 @@ move: Z | ROCKET | homing cat missile
 move: X | RAINBOW DASH | 700ms dash
 
 [mario]
-desc: placeholder
-move: Z | UPPERCUT | 1s charge, blast up
-move: X | SPIN | extra jump, 2s stun
+desc: The fearless plumber brings a fireball to keep the killer at bay.
+move: Z | FIREBALL | throw a fireball that stuns the killer on hit; 15s hit cooldown, 25s miss cooldown
+move: X | SPIN | extra jump that stuns on contact; 15s hit cooldown, 25s miss cooldown
 
 [evil]
 desc: placeholder
