@@ -214,12 +214,6 @@ Object.assign(PlatformerEngine.prototype, {
           ctx.save();
           if (b === this.player && b.invis) ctx.globalAlpha = 0.45;
           else if (b.isRemote && b.away) ctx.globalAlpha = 0.5;
-          if (b.tilt && Math.abs(b.tilt) > 0.01 && b.char !== 'bear5') {
-            // lean into the slope, pivot at the feet
-            ctx.translate(cx, dy + dh);
-            ctx.rotate(b.tilt);
-            ctx.translate(-cx, -(dy + dh));
-          }
           if (b.facing < 0) {
             ctx.translate(cx, 0);
             ctx.scale(-1, 1);

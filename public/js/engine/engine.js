@@ -265,22 +265,6 @@ class PlatformerEngine {
     b.pos.x = ox; b.pos.y = oy; // nothing found, leave it
   }
 
-  // tilt the body to match the slope under its feet
-  updateTilt(b, dt) {
-    let want = 0;
-    if (b.alive !== false && !b.rocketing && Math.abs(b.vel.y || 0) < 60) {
-      const cx = b.pos.x + b.w / 2, feet = b.pos.y + b.h;
-      const l = this.floorAt(cx - 22, feet), r = this.floorAt(cx + 22, feet);
-      if (l !== null && r !== null) {
-        const ang = Math.atan2(r - l, 44);
-        if (Math.abs(ang) > 0.08) want = Math.max(-0.6, Math.min(0.6, ang)); // ignore tiny bumps
-      }
-    }
-    const directionStep = 0.6 / 8;
-    const direction = Math.max(-8, Math.min(7, Math.round(want / directionStep)));
-    b.tilt = direction * directionStep;
-  }
-
   // split motion
   moveBody(b, dt, statics) {
     if (this.noclip && b === this.player) {
@@ -656,10 +640,6 @@ class PlatformerEngine {
       }
       r.animTime += dt; // blink all
     }
-
-    // lean on slopes
-    if (p) this.updateTilt(p, dt);
-    for (const r of this.remotes) this.updateTilt(r, dt);
 
     // fell far
     if (p && !p.rocketing && p.pos.y > this.fallY && this.damageOn !== false) {
