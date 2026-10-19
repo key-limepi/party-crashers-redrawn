@@ -488,7 +488,9 @@ class PlatformerEngine {
       const dy = this.pullSrc.y - (p.pos.y + p.h / 2);
       const d = Math.hypot(dx, dy) || 1;
       // stop next to the killer instead of shaking on top of them
-      const pull = Math.max(0, Math.min(450 * dt, d - 36));
+      // Outpace survivor run speed so the rope draws its target inward instead
+      // of letting ordinary movement cancel the drag.
+      const pull = Math.max(0, Math.min(900 * dt, d - 36));
       p.pos.x += (dx / d) * pull;
       p.pos.y += (dy / d) * pull;
       p.vel.y = 0; // no stored up fall speed
