@@ -38,7 +38,7 @@ async function netTick() {
             anim: curAnim(p), m1v: p._m1v || 0, trail: !!(p.evil && game.fly),
           }),
         });
-        const getReq = fetch('/api/players');
+        const getReq = fetch(`/api/players?id=${encodeURIComponent(net.id)}`);
         const got = await Promise.all([sendReq, getReq]);
         const data = await got[1].json();
         net.ping = Math.round(performance.now() - t0); // trip time

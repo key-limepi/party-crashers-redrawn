@@ -9,7 +9,7 @@ import time
 from .. import state
 from ..admins import is_admin
 from ..config import CHARACTERS
-from ..game import end_round, here_players, note_death, start_intermission, start_round, start_select
+from ..game import choose_round_map, end_round, here_players, note_death, start_intermission, start_round, start_select
 from ..malice_store import pick_killer, set_malice
 
 
@@ -52,6 +52,7 @@ def _skip_wait(me, data):
     if state.phase == "lobby" and len(here_players()) >= 2:
         start_intermission()
     elif state.phase == "intermission" and len(here_players()) >= 2:
+        choose_round_map()
         start_select()
     elif state.phase == "select" and len(here_players()) >= 2:
         if state.players.get(state.killer_id, {}).get("killer_char"):

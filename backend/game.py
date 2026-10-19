@@ -80,6 +80,7 @@ def start_intermission():
     # break once
     state.phase = "intermission"
     state.phase_end = time.time() + INTER_TIME
+    state.map_votes.clear()
     flag_verify()
     print("[GAME] State: INTERMISSION (30s)", flush=True)
 
@@ -141,9 +142,6 @@ def start_round():
     state.round_players = set(eligible)
     roster = ", ".join(f"{pid}:{pl.get('name', '?')}" for pid, pl in eligible.items())
     print(f"[ROUND] roster: {roster} | all players: {player_activity()}", flush=True)
-    # roll round map
-    state.round_map = random.choices([m["id"] for m in MAPS], weights=[m["weight"] for m in MAPS])[0]
-    print(f"[ROUND] map: {state.round_map}", flush=True)
     # random picks
     for pid, pl in eligible.items():
         survivor_ids = [c["id"] for c in CHARACTERS if not c.get("killer")]
@@ -266,6 +264,7 @@ def _drop_timed_out(now):
         print(f"!! {players[pid]['name']} timed out", flush=True)
         del players[pid]
         state.last_hit.pop(pid, None)
+        state.map_votes.pop(pid, None)
 
 
 def _expire_lists(now):
@@ -381,10 +380,27 @@ def _tick_intermission(now):
         print("!! not enough players - back to lobby!!", flush=True)
     elif now >= state.phase_end:
         if len(here_players()) >= 2:
+            choose_round_map()
             start_select()
         else:
             state.phase = "lobby"
             state.killer_id = None
+
+
+def choose_round_map():
+    pool = [m["id"] for m in MAPS]
+    counts = {map_id: 0 for map_id in pool}
+    active = here_players()
+    for pid, map_id in list(state.map_votes.items()):
+        if pid not in active or map_id not in counts:
+            state.map_votes.pop(pid, None)
+        else:
+            counts[map_id] += 1
+    high = max(counts.values(), default=0)
+    winners = [map_id for map_id, count in counts.items() if count == high]
+    state.round_map = random.choice(winners) if high else random.choice(pool)
+    state.map_votes.clear()
+    print(f"[ROUND] map vote: {state.round_map} {counts}", flush=True)
 
 
 def _tick_select(now):
@@ -426,6 +442,7 @@ def _tick_lms_cutscene(now):
         state.cutscene_skip.clear()
         state.phase = "intermission"
         state.phase_end = now + INTER_TIME
+        state.map_votes.clear()
         flag_verify()
         print("[GAME] State: INTERMISSION (30s)", flush=True)
 

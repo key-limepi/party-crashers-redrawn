@@ -9,6 +9,7 @@ class Body {
     this.vel = new Vec(0, 0);
     this.w = w; this.h = h;
     this.isStatic = !!opts.isStatic;
+    this.semisolid = !!opts.semisolid;
     this.onGround = false;
     this.color = opts.color || '#fff';
     // sprite sets

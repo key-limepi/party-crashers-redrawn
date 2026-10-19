@@ -45,6 +45,7 @@ intro_start = 0.0 # video window opened
 killer_id = None
 current_round = 0
 round_map = "rough_draft" # round map id
+map_votes = {} # player map votes
 result = None # last result
 round_players = set() # current round players
 cutscene_skip = set() # cinema skip votes

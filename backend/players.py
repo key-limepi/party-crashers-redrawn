@@ -34,6 +34,7 @@ def join(h, data):
                 if state.killer_id == _old:
                     state.killer_id = pid
                 del state.players[_old]
+                state.map_votes.pop(_old, None)
         else:
             # local tabs are players
             fid = f"{fid}:{tab}"
@@ -157,6 +158,7 @@ def leave(h, data):
     with state.lock:
         gone = state.players.pop(pid, None)
         state.last_hit.pop(pid, None)
+        state.map_votes.pop(pid, None)
     if gone:
         print(f"!! {gone['name']} left", flush=True)
     h.send_json({"ok": True})

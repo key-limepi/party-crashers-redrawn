@@ -21,6 +21,7 @@ POST_ROUTES = {
     "/api/rocket": traps.rocket,
     "/api/hit": combat.hit,
     "/api/pick": lobby.pick,
+    "/api/map-vote": lobby.map_vote,
     "/api/chat": lobby.chat,
     "/api/mod": mod.mod_action,
     "/api/heal": players.heal,

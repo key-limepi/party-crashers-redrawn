@@ -1,8 +1,9 @@
 """GET /api/players: the one big snapshot every client polls (phase, timers, players, traps, chat...)."""
 import time
+import urllib.parse
 
 from .. import state
-from ..config import CHARACTERS, GRACE_TIME, STATE_KEYS, TIMEOUT
+from ..config import CHARACTERS, GRACE_TIME, MAPS, STATE_KEYS, TIMEOUT
 from ..game import update_rockets
 
 
@@ -44,9 +45,24 @@ def players_snapshot(h, url):
             d["pay_msg"] = pl.get("pay_msg", "")
             snapshot[pid] = d
         taken = {pl.get("char") for pl in state.players.values() if pl.get("char")}
+        active_ids = {pid for pid, pl in state.players.items()
+                      if not pl.get("away", False) and now - pl.get("last", 0) < TIMEOUT}
+        vote_counts = {m["id"]: 0 for m in MAPS}
+        for pid, map_id in list(state.map_votes.items()):
+            if pid not in active_ids or map_id not in vote_counts:
+                state.map_votes.pop(pid, None)
+            else:
+                vote_counts[map_id] += 1
+        sess = h.session()
+        my_id = urllib.parse.parse_qs(url.query).get("id", [None])[0]
+        my_player = state.players.get(my_id)
+        my_vote = state.map_votes.get(my_id) if my_player and sess and my_player.get("sid") == sess.get("sid") else None
         h.send_json({
             "round": state.current_round,
             "map": state.round_map,
+            "vote_options": list(vote_counts),
+            "vote_counts": vote_counts,
+            "my_vote": my_vote,
             "phase": state.phase,
             "time_left": max(0, int(state.phase_end - now)) if state.phase != "lobby" else 0,
             "grace": state.phase == "round" and now < state.round_start + GRACE_TIME,

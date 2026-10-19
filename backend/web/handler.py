@@ -104,7 +104,7 @@ class Handler(SimpleHTTPRequestHandler):
                 return
             GET_PATH_ROUTES[url.path](self, url)
             return
-        route = GET_ROUTES.get(self.path)
+        route = GET_ROUTES.get(url.path)
         if route is not None:
             route(self, url)
             return

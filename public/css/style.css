@@ -495,6 +495,46 @@
       line-height: normal;
       white-space: nowrap;
     }
+    #mapVote {
+      position: absolute;
+      top: 48px;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      z-index: 35;
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: rgba(10, 10, 46, 0.94);
+      border: 3px outset #c0c0f0;
+      line-height: normal;
+    }
+    .mapVoteOption {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      width: clamp(95px, 15vw, 145px);
+      padding: 4px;
+      margin: 0;
+      border: 3px outset #c0c0f0;
+      background: #22225f;
+      font-size: 13px;
+    }
+    .mapVoteOption img {
+      width: 100%;
+      height: 58px;
+      object-fit: cover;
+      image-rendering: pixelated;
+      border: 2px solid #fff;
+    }
+    .mapVoteOption.selected { border-color: #ffe93b; background: #4b3c00; }
+    .mapVoteOption:disabled { cursor: default; opacity: 0.8; }
+    @media (max-width: 560px) {
+      #mapVote { top: 44px; gap: 3px; padding: 3px; }
+      .mapVoteOption { width: clamp(78px, 22vw, 110px); padding: 3px; font-size: 11px; }
+      .mapVoteOption img { height: 42px; }
+    }
     /* hero lyrics */
     #lyricBar {
       position: absolute;

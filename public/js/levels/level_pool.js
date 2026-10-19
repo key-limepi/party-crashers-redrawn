@@ -5,6 +5,7 @@ const MAP_POOL = [
     name: 'Rough Draft',
     level: LEVEL_ROUGH_DRAFT,
     art: './Assets/Images/Levels/RoughDraft.png',
+    preview: './Assets/Images/Levels/LevelArt/roughdraft_art.PNG',
     backdrop: './Assets/Images/Levels/RoughDraft_bg.jpg',
     background: '#3b2a2a',
     music: 'Rough-Draft-theme.mp3',
@@ -24,9 +25,10 @@ const MAP_POOL = [
   },
   {
     id: 'greenhill',
-    name: 'Green Hill',
+    name: 'Green Grass',
     level: LEVEL_GREENHILL_HITBOXES,
-    art: './Assets/Images/Levels/Greenhill_Hitboxes.png',
+    art: './Assets/Images/Levels/Greenhill_Art.png',
+    preview: './Assets/Images/Levels/LevelArt/GreenHill_Art.PNG',
     backdrop: './Assets/Images/Levels/greenhill_bg.png',
     backdropShiftY: 480, // sunset sits above the ground
     background: '#4aa3e0',

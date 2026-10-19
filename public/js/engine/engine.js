@@ -92,6 +92,7 @@ class PlatformerEngine {
   // traced level
   loadLevel(level, art, opts = {}) {
     for (const [x, y, w, h] of level.rects) this.addPlatform(x, y, w, h, '#000');
+    for (const [x, y, w, h] of level.semi || []) this.addPlatform(x, y, w, h, '#000', 'main', true);
     // stay inside
     this.addPlatform(-200, -1500, 200, level.h + 3000, '#000'); // left wall
     this.addPlatform(level.w, -1500, 200, level.h + 3000, '#000'); // right wall
@@ -206,8 +207,8 @@ class PlatformerEngine {
     }
   }
 
-  addPlatform(x, y, w, h, color = '#9ece6a', map = 'main') {
-    const p = new Body(x, y, w, h, { isStatic: true, color });
+  addPlatform(x, y, w, h, color = '#9ece6a', map = 'main', semisolid = false) {
+    const p = new Body(x, y, w, h, { isStatic: true, color, semisolid });
     this.maps[map].push(p);
     return p;
   }
@@ -275,7 +276,9 @@ class PlatformerEngine {
         if (Math.abs(ang) > 0.08) want = Math.max(-0.6, Math.min(0.6, ang)); // ignore tiny bumps
       }
     }
-    b.tilt = (b.tilt || 0) + (want - (b.tilt || 0)) * Math.min(1, 12 * dt);
+    const directionStep = 0.6 / 8;
+    const direction = Math.max(-8, Math.min(7, Math.round(want / directionStep)));
+    b.tilt = direction * directionStep;
   }
 
   // split motion
@@ -293,15 +296,32 @@ class PlatformerEngine {
     for (let i = 0; i < steps; i++) {
       b.pos.x += b.vel.x * stepDt;
       this.resolveAxis(b, statics, 'x');
+      const previousBottom = b.bottom;
       b.pos.y += b.vel.y * stepDt;
-      this.resolveAxis(b, statics, 'y');
+      this.resolveAxis(b, statics, 'y', previousBottom);
     }
   }
 
   // pop out
-  resolveAxis(b, statics, axis) {
+  resolveAxis(b, statics, axis, previousBottom = b.bottom) {
+    let steppedUp = false;
     for (const s of statics) {
       if (!aabbOverlap(b, s)) continue;
+      if (s.semisolid && axis === 'x') {
+        if (steppedUp || b.vel.y < 0 || !(b.wasGround || b.onGround)) continue;
+        const rise = b.bottom - s.top;
+        if (rise <= 0 || rise > 12) continue;
+        const oldY = b.pos.y;
+        b.pos.y = s.top - b.h;
+        const clear = !statics.some((other) => other !== s && aabbOverlap(b, other));
+        if (clear) {
+          b.onGround = true;
+          steppedUp = true;
+        } else {
+          b.pos.y = oldY;
+        }
+        continue;
+      }
       if (axis === 'x') {
         // small steps
         const rise = b.bottom - s.top;
@@ -319,6 +339,8 @@ class PlatformerEngine {
         else b.pos.x = s.pos.x + s.w;
         b.vel.x = 0;
       } else {
+        // Land on top only
+        if (s.semisolid && (b.vel.y < 0 || previousBottom > s.top || b.bottom < s.top)) continue;
         const fromAbove = b.bottom - s.top; // top depth
         const fromBelow = s.bottom - b.top; // bottom depth
         if (b.vel.y > 0 || (b.vel.y === 0 && fromAbove <= fromBelow)) {

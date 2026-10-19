@@ -5,7 +5,7 @@ import time
 from .. import state
 from ..admins import is_admin
 from ..chat_filter import is_clean
-from ..config import (CHARACTERS, CHAT_COOLDOWN, FORMBAR_MODE, INTER_TIME, MALICE_PER_BUY, MALICE_PRICE, MUTE_TIME, QUICK_CHAT)
+from ..config import (CHARACTERS, CHAT_COOLDOWN, FORMBAR_MODE, INTER_TIME, MALICE_PER_BUY, MALICE_PRICE, MAPS, MUTE_TIME, QUICK_CHAT)
 from ..formbar import formbar_transfer
 from ..game import begin_round, here_players
 from ..malice_store import add_malice
@@ -54,7 +54,6 @@ def malice_buy(h, data):
         total = state.malice.get(fid, 0)
     print(f"!! {me['name']} bought malice ({total})", flush=True)
     h.send_json({"ok": True, "malice": total})
-    return
 
 
 def intro(h, data):
@@ -74,7 +73,6 @@ def intro(h, data):
                 state.phase_end = time.time() + INTER_TIME
                 print("[GAME] State: INTERMISSION (30s)", flush=True)
     h.send_json({"ok": True})
-    return
 
 
 def pick(h, data):
@@ -98,7 +96,23 @@ def pick(h, data):
             h.send_json({"ok": True, "char": want})
         else:
             h.send_json({"ok": False, "reason": "nope!!"})
-    return
+
+
+def map_vote(h, data):
+    """POST /api/map-vote"""
+    with state.lock:
+        pid = data.get("id")
+        me = state.players.get(pid)
+        wanted = data.get("map")
+        available = {m["id"] for m in MAPS}
+        sess = h.session()
+        if (me and sess and me.get("sid") == sess.get("sid")
+                and state.phase == "intermission" and pid in here_players()
+                and isinstance(wanted, str) and wanted in available):
+            state.map_votes[pid] = wanted
+            h.send_json({"ok": True})
+        else:
+            h.send_json({"ok": False, "reason": "voting is closed!!"})
 
 
 def chat(h, data):
@@ -137,5 +151,3 @@ def chat(h, data):
                 h.send_json({"ok": True})
         else:
             h.send_json({"ok": False})
-    return
-

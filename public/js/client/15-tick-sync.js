@@ -14,6 +14,48 @@
       try { bed.src = audioSrc(MUS + file); bed.currentTime = 0; } catch (_) { /* hush!! */ }
     }
 
+    const mapVotePanel = document.getElementById('mapVote');
+    let mapVoteOptions = '';
+    function updateMapVote(data) {
+      const ids = data.vote_options || [];
+      mapVotePanel.style.display = data.phase === 'intermission' && ids.length ? 'flex' : 'none';
+      const signature = ids.join('|');
+      if (signature !== mapVoteOptions) {
+        mapVoteOptions = signature;
+        mapVotePanel.replaceChildren();
+        for (const id of ids) {
+          const def = mapDef(id);
+          const button = document.createElement('button');
+          button.className = 'mapVoteOption';
+          button.type = 'button';
+          button.dataset.map = id;
+          const image = document.createElement('img');
+          image.src = def.preview || def.art;
+          image.alt = `${def.name} preview`;
+          const name = document.createElement('span');
+          name.className = 'mapVoteName';
+          name.textContent = def.name;
+          const count = document.createElement('span');
+          count.className = 'mapVoteCount';
+          button.append(image, name, count);
+          button.addEventListener('click', () => {
+            fetch('/api/map-vote', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: net.id, map: id }),
+            }).catch(() => {});
+          });
+          mapVotePanel.appendChild(button);
+        }
+      }
+      for (const button of mapVotePanel.children) {
+        const id = button.dataset.map;
+        button.classList.toggle('selected', data.my_vote === id);
+        button.disabled = data.phase !== 'intermission';
+        button.querySelector('.mapVoteCount').textContent = `votes: ${(data.vote_counts || {})[id] || 0}`;
+      }
+    }
+
     function syncPhase(t) {
       let { p, data, prevRound, others } = t;
       const prevPhase = net.phase;
@@ -235,6 +277,7 @@
 
     function updatePhaseText(t) {
       let { p, data, others, you } = t;
+      updateMapVote(data);
       // phase text
       let phaseText = 'lobby!!';
       if (data.phase === 'lobby') {
@@ -248,7 +291,11 @@
         const r = data.result;
         const who = r && r.winner === 'killer' ? `EVIL ${r.killer_name} WINS!!` : 'SURVIVORS WIN!!';
         const fee = net.me && net.me.round_cost ? ` (${net.me.round_cost} digipogs a round)` : '';
-        phaseText = `${who} picks open in ${t}s!!${fee}`;
+        if (data.vote_options && data.vote_options.length > 0) {
+          phaseText = `${who} vote for map!! ${t}s${fee}`;
+        } else {
+          phaseText = `${who} picks open in ${t}s!!${fee}`;
+        }
         // countdown tick, intermission only
         if (t <= 5 && t > 0 && t !== net._tickSec) {
           net._tickSec = t;
