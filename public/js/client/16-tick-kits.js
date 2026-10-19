@@ -355,7 +355,7 @@
               fetch('/api/hit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: net.id, victim: r.id, dmg: tickDmg, stun: 0 }),
+                body: JSON.stringify({ id: net.id, victim: r.id, dmg: tickDmg, stun: 0, pull: true }),
               }).then((response) => response.json()).then((result) => {
                 if (K.pullSequence === seq && result.ok) K.pullDamage += Math.max(0, Number(result.landed) || 0);
               }).catch(() => {}).finally(() => {

@@ -3,7 +3,7 @@
 import time
 
 from .. import state
-from ..config import STUN_IFRAMES, TOUCH_COOLDOWN
+from ..config import EVIL_PULL_RANGE, STUN_IFRAMES, TOUCH_COOLDOWN
 from ..game import grace_over, is_rocketing, note_death
 
 
@@ -48,7 +48,11 @@ def hit(h, data):
             # Mario's fireball follows the map geometry and the client reports
             # the confirmed collision; bound range to the playable map scale.
             fireball_hit = bool(data.get("fireball")) and not atk_evil and atk.get("char") == "mario"
-            reach = 4500 if fireball_hit else (140 if stun <= 0 else 95)
+            evil_pull_hit = (bool(data.get("pull")) and atk_evil and atk.get("pull")
+                             and atk.get("pulltarget") == data.get("victim"))
+            reach = (4500 if fireball_hit else
+                     EVIL_PULL_RANGE if evil_pull_hit else
+                     140 if stun <= 0 else 95)
             dx = vic.get("x", 0) - k.get("x", 0)
             dy = vic.get("y", 0) - k.get("y", 0)
             if dx * dx + dy * dy < reach * reach:

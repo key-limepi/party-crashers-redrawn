@@ -54,6 +54,7 @@ LMS_DURATIONS = {"lux": 209.736, "sonic": 266.928, "supersonic": 266.928, "tails
 TOUCH_DIST = 55 # touch range
 TOUCH_DMG = 25 # hit damage
 TOUCH_COOLDOWN = 1.0
+EVIL_PULL_RANGE = 350
 SPIKE_MAX = 5 # trap cap
 SPIKE_LIFE = 45 # trap rot
 SPIKE_DMG = 30
