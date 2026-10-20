@@ -1,5 +1,11 @@
 # changelog
 
+## v1.01
+- shadow mario's winscreen now uses a browser-friendly h264 video
+- shadow mario and bear5 no longer show evil lux's spike meter
+- lobby costumes stay visually and mechanically in sync, including the previous killer
+- lux's lms anthem is now Lux-LMS-theme
+
 ## v1.0
 - mario now uses his fall and stun sprites, with his animations transitioning correctly during play
 - uppercut is now a smaller, bouncing fireball that uses the fireball sprites and sound, stops at collisions, and stuns the killer on hit; multiplayer shots are synchronized

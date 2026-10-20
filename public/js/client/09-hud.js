@@ -285,7 +285,7 @@
         }
       }
       // trap count
-      const showSpikes = !!(p.evil && p.alive !== false && net.phase === 'round');
+      const showSpikes = !!(p.evil && net.killerPick === 'evil' && p.alive !== false && net.phase === 'round');
       spikeBar.style.display = showSpikes ? 'flex' : 'none';
       if (showSpikes) {
         const trapsLeft = Math.max(0, 5 - (game.spikes ? game.spikes.length : 0));

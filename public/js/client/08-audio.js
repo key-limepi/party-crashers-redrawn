@@ -1,5 +1,5 @@
     // music beds
-    const AUDIO_V = 1; // bump with index.html ?v=
+    const AUDIO_V = 2; // bump with index.html ?v=
     const audioSrc = (src) => `${src}?v=${AUDIO_V}`;
     function loopTrack(src, looped = true) {
       const a = new Audio(audioSrc(src));
@@ -82,7 +82,7 @@
       wait: loopTrack(MUS + 'Waiting-for-players-theme.mp3'), // lonely lobby theme
       inter: loopTrack(MUS + 'Intermission-theme.mp3'), // snes x band intermission theme
       lms: loopTrack(MUS + 'last_man_standing.mp3', false),
-      lmslux: loopTrack(MUS + 'lux_lms.mp3', false), // lux anthem
+      lmslux: loopTrack(MUS + 'Lux-LMS-theme.mp3', false), // lux anthem
       lmssonic: loopTrack(MUS + 'sonic_lms.mp3', false), // sonic anthem
       lmstails: loopTrack(MUS + 'tails_lms.mp3', false), // tails anthem
       lmsnyan: loopTrack(MUS + 'nyanlms.mp3', false), // nyan anthem

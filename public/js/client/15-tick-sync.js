@@ -386,7 +386,8 @@
         }
         r.lastPush = nowHist;
         r.name = d.name; r.facing = d.facing; r.hp = d.hp;
-        r.char = id === data.killer_id ? (d.killer_char || 'evil') : (d.char || 'lux');
+        const isRoundKiller = data.phase === 'round' && id === data.killer_id;
+        r.char = isRoundKiller ? (d.killer_char || 'evil') : (d.char || ((data.phase === 'lobby' || data.phase === 'intermission') ? lobbyCostume(id) : 'lux'));
         if (r.char === 'shadowmario' && r._shadowDiveSampleAt) {
           const sampleSeconds = Math.max(0.001, (nowHist - r._shadowDiveSampleAt) / 1000);
           r._shadowDiveVy = (d.y - r._shadowDiveSampleY) / sampleSeconds;
@@ -397,7 +398,7 @@
         }
         r.onGround = d.onGround ?? true;
         r.alive = d.alive ?? d.hp > 0;
-        r.evil = id === data.killer_id;
+        r.evil = isRoundKiller;
         r.mimic = r.evil && r.char === 'shadowmario' ? d.mimic : null;
         r.mimicName = r.evil && r.char === 'shadowmario' ? d.mimic_name : null;
         r.moving = !!d.moving;
@@ -409,8 +410,9 @@
         r.forming = !!d.forming; // mid glow up
         r.tremble = !!d.forming;
         r.whiteFlash = !!d.forming;
+        r.holdingBomb = !!d.holding;
         // lobby face sync
-        const rface = (!d.char && (net.phase === 'lobby' || net.phase === 'intermission')) ? lobbyCostume(id) : (r.char || 'lux');
+        const rface = (!r.evil && !d.char && (data.phase === 'lobby' || data.phase === 'intermission')) ? lobbyCostume(id) : (r.char || 'lux');
         const luxDim = !r.evil && rface === 'lux' && !!d.aura_hot;
         r.sprites = r.evil ? (r.char === 'bear5' ? bear5Sprites : r.char === 'shadowmario' ? (charSprites[r.mimic] || shadowMarioSprites) : evilSprites) : (r.char === 'supersonic' && !r.super && !r.forming ? sonicSprites : (r.char === 'tails' && r.holdingBomb ? tailsCarrySprites : (luxDim ? luxDimSprites : (charSprites[rface] || luxSprites)))); // see all
         // true size
@@ -439,7 +441,6 @@
         r.kickUntil = !!d.kickUntil;
         r.jabUntil = !!d.jabUntil;
         r.throwUntil = !!d.throwUntil;
-        r.holdingBomb = !!d.holding;
         r.dashing = !!d.dashing;
         r.away = !!d.away;
         r.inRound = !!d.in_round;
@@ -688,7 +689,11 @@
         if (!p.evil) wearChar(mePick.char === 'supersonic' && !SS.transformed ? 'sonic' : mePick.char);
       } else if (mePick && !mePick.char && net.pick) {
         net.pick = null;
-        if (!p.evil) wearChar('lux');
+        if (!p.evil) {
+          const lobbyChar = net.costume || lobbyCostume(net.id);
+          wearChar(lobbyChar);
+          game.moveSpeed = lobbyChar === 'sonic' ? 270 : 240;
+        }
       }
       // server truth
       if (!statusUntil || Date.now() > statusUntil) {

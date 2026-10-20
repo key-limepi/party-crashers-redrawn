@@ -126,7 +126,7 @@ GRADE_CUTS = ((400, "S"), (250, "A"), (120, "B"), (40, "C")) # else d
 WIN_CUTSCENES = {
     "evil": "./Assets/Videos/eluxwinscreen.mp4", # evil lux win
     "bear5": "./Assets/Videos/bear5_killerintro.mp4", # bear5 win
-    "shadowmario": "./Assets/Videos/shadowmario_winscreen.mp4",
+    "shadowmario": "./Assets/Videos/shadowmario_winscreen.mp4?v=2",
 }
 
 LOCAL_SESSION = {"sid": "local", "fid": "local", "name": "guest", "pin": None} # local login stand-in
