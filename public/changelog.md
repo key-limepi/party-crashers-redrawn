@@ -4,7 +4,7 @@
 - shadow mario's winscreen now uses a browser-friendly h264 video
 - shadow mario and bear5 no longer show evil lux's spike meter
 - lobby costumes stay visually and mechanically in sync, including the previous killer
-- lux's lms anthem is now Lux-LMS-theme
+- lux's has a new lms made by asa (hi im asa i compose the songs if there's a song in here i didnt make then it's a placeholder)
 
 ## v1.0
 - mario now uses his fall and stun sprites, with his animations transitioning correctly during play
