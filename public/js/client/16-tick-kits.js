@@ -47,7 +47,7 @@
         SM.slamCD = now + 15000;
         SM.slamActive = true; SM.slamStartedAt = now; SM.slamAirborne = true;
         SM.slamHitIds.clear();
-        SM.slamSound = fileSfx(SFX + 'shadowmariodive.wav', { loop: true, v: 0.25 }); // upward sound
+        SM.slamSound = fileSfx(SFX + 'shadowmariodive.wav', { loop: false, v: 0.25 }); // upward sound (no loop)
         fileSfx(SFX + 'shadowmariosneak.wav', { v: 0.25 }); // slam start sound
         p.chargeDir = 0; p.vel.x *= 0.25; p.vel.y = -1800; p.noCutUntil = game.time + 1; p.onGround = false; p.rooted = false;
         setPose('smslam', 2600);
