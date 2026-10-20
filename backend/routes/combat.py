@@ -3,7 +3,7 @@
 import time
 
 from .. import state
-from ..config import STUN_IFRAMES, TOUCH_COOLDOWN
+from ..config import EVIL_PULL_RANGE, STUN_IFRAMES, TOUCH_COOLDOWN
 from ..game import grace_over, is_rocketing, note_death
 
 
@@ -45,7 +45,14 @@ def hit(h, data):
                 h.send_json({"ok": True})
                 return
             # wide swings
-            reach = 140 if stun <= 0 else 95
+            # Mario's fireball follows the map geometry and the client reports
+            # the confirmed collision; bound range to the playable map scale.
+            fireball_hit = bool(data.get("fireball")) and not atk_evil and atk.get("char") == "mario"
+            evil_pull_hit = (bool(data.get("pull")) and atk_evil and atk.get("pull")
+                             and atk.get("pulltarget") == data.get("victim"))
+            reach = (4500 if fireball_hit else
+                     EVIL_PULL_RANGE if evil_pull_hit else
+                     180 if stun <= 0 else 130)
             dx = vic.get("x", 0) - k.get("x", 0)
             dy = vic.get("y", 0) - k.get("y", 0)
             if dx * dx + dy * dy < reach * reach:
@@ -63,7 +70,7 @@ def hit(h, data):
                     print(f"!! {vic['name']} COUNTERED {k['name']}!!", flush=True)
                     h.send_json({"ok": True})
                     return
-                if stun > 0 or now - state.last_hit.get(data["victim"], 0) >= TOUCH_COOLDOWN:
+                if stun > 0 or data.get("ability") or now - state.last_hit.get(data["victim"], 0) >= TOUCH_COOLDOWN:
                     state.last_hit[data["victim"]] = now
                     # shield eats hits first
                     rem = dmg
@@ -122,7 +129,7 @@ def hit(h, data):
                                            "dmg": landed, "stun": round(float(stun), 2), "at": now})
                         del state.hits[:-12]
                     print(f"!! {k['name']} hit {vic['name']} for {dmg}!!", flush=True)
-                    h.send_json({"ok": True})
+                    h.send_json({"ok": True, "landed": landed})
                     return
     h.send_json({"ok": False})
     return

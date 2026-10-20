@@ -1,5 +1,5 @@
     // music beds
-    const AUDIO_V = 1; // bump with index.html ?v=
+    const AUDIO_V = 2; // bump with index.html ?v=
     const audioSrc = (src) => `${src}?v=${AUDIO_V}`;
     function loopTrack(src, looped = true) {
       const a = new Audio(audioSrc(src));
@@ -44,6 +44,7 @@
     const introWrap = document.getElementById('introWrap');
     const introVid = document.getElementById('introVid');
     const bearVid = document.getElementById('bearVid');
+    const shadowMarioVid = document.getElementById('shadowMarioVid');
     if (introVid) {
       const introDone = () => {
         if (net.id) {
@@ -62,10 +63,15 @@
         introWrap.style.display = 'none';
         introDone();
       });
+      if (shadowMarioVid) shadowMarioVid.addEventListener('ended', () => {
+        introWrap.style.display = 'none';
+        introDone();
+      });
       introWrap.addEventListener('click', () => {
         introWrap.style.display = 'none';
         try { introVid.pause(); } catch (_) { /* hush!! */ }
         try { bearVid.pause(); } catch (_) { /* hush!! */ }
+        try { shadowMarioVid.pause(); } catch (_) { /* hush!! */ }
         introDone();
       });
     }
@@ -76,7 +82,7 @@
       wait: loopTrack(MUS + 'Waiting-for-players-theme.mp3'), // lonely lobby theme
       inter: loopTrack(MUS + 'Intermission-theme.mp3'), // snes x band intermission theme
       lms: loopTrack(MUS + 'last_man_standing.mp3', false),
-      lmslux: loopTrack(MUS + 'lux_lms.mp3', false), // lux anthem
+      lmslux: loopTrack(MUS + 'Lux-LMS-theme.mp3', false), // lux anthem
       lmssonic: loopTrack(MUS + 'sonic_lms.mp3', false), // sonic anthem
       lmstails: loopTrack(MUS + 'tails_lms.mp3', false), // tails anthem
       lmsnyan: loopTrack(MUS + 'nyanlms.mp3', false), // nyan anthem
@@ -84,6 +90,7 @@
       hero: loopTrack(MUS + 'supersonichero.mp3'), // super sonic theme
       chase: loopTrack(MUS + 'elux_chasenew.mp3'),
       bear5chase: loopTrack(MUS + 'bear5chasetheme.mp3'), // bear5 chase theme
+      shadowmariochase: loopTrack(MUS + 'shadowmario_chasetheme.mp4'),
       terror: loopTrack(MUS + 'elux_terrorradius_new.mp3'),
       charselect: loopTrack(MUS + 'charselect.mp3'),
     };
@@ -100,7 +107,7 @@
         if (lmsTrack === key) lmsEnded = true;
       });
     }
-    const soloOrder = ['map', 'wait', 'inter', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'hero', 'chase', 'bear5chase', 'terror', 'charselect'];
+    const soloOrder = ['map', 'wait', 'inter', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'hero', 'chase', 'bear5chase', 'shadowmariochase', 'terror', 'charselect'];
     window.addEventListener('keydown', (e) => {
       if (e.repeat || e.key.toLowerCase() !== 'm') return;
       soloIdx = soloIdx >= soloOrder.length - 1 ? -1 : soloIdx + 1;
@@ -119,6 +126,12 @@
 
     // real sounds
     const SFX = './Assets/Sounds/';
+    const LUX_SFX = {
+      prayer: SFX + 'lux_prayer.mp3',
+      run: SFX + 'lux_run.mp3',
+      panting: SFX + 'lux_panting.mp3',
+      heal: SFX + 'lux_healpatch.mp3',
+    };
     const MARIO_JUMPS = [SFX + 'mario_jump.wav'];
     game.onJump = (dbl) => { const mario = typeof isMario === 'function' && isMario() && game.player && !game.player.evil; fileSfx(mario ? vpick(MARIO_JUMPS) : SFX + 'jump.wav', mario ? { rate: dbl ? 1.3 : 1, v: 0.3 } : { rate: dbl ? 1.3 : 1 }); };
     game.onHeal = (n) => {

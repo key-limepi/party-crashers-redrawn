@@ -54,6 +54,7 @@ LMS_DURATIONS = {"lux": 209.736, "sonic": 266.928, "supersonic": 266.928, "tails
 TOUCH_DIST = 55 # touch range
 TOUCH_DMG = 25 # hit damage
 TOUCH_COOLDOWN = 1.0
+EVIL_PULL_RANGE = 350
 SPIKE_MAX = 5 # trap cap
 SPIKE_LIFE = 45 # trap rot
 SPIKE_DMG = 30
@@ -78,7 +79,8 @@ CHARACTERS = [
     {"id": "supersonic", "name": "SUPER SONIC", "dev": True},
     {"id": "nyan", "name": "NYAN CYAT", "dev": True},
     {"id": "mario", "name": "MARIO"},
-    {"id": "bear5", "name": "BEAR5", "dev": True, "killer": True},
+    {"id": "bear5", "name": "BEAR5", "killer": True},
+    {"id": "shadowmario", "name": "SHADOW MARIO", "killer": True},
 ]
 
 # map loot pool, weighted
@@ -96,9 +98,9 @@ QUICK_CHAT = (
 # fresh stamps
 STATE_KEYS = ("x", "y", "facing", "moving", "onGround",
               "invis", "m1", "stunned", "pull", "cower", "windup", "pose", "dashing",
-              "peeling", "spinning", "spinwindup", "pullwindup", "lift", "super", "forming", "holding", "whipuntil",
+              "peeling", "spinning", "spinwindup", "pullwindup", "pulltarget", "lift", "super", "forming", "holding", "whipuntil",
               "dtmult", "healmult", "praying", "rushing", "panting",
-              "anim", "m1v", "trail")
+              "anim", "m1v", "trail", "fireball", "mimic")
 
 # lux overheal tuning
 AURA_RADIUS = 260 # conversion reach
@@ -124,6 +126,7 @@ GRADE_CUTS = ((400, "S"), (250, "A"), (120, "B"), (40, "C")) # else d
 WIN_CUTSCENES = {
     "evil": "./Assets/Videos/eluxwinscreen.mp4", # evil lux win
     "bear5": "./Assets/Videos/bear5_killerintro.mp4", # bear5 win
+    "shadowmario": "./Assets/Videos/shadowmario_winscreen.mp4?v=2",
 }
 
 LOCAL_SESSION = {"sid": "local", "fid": "local", "name": "guest", "pin": None} # local login stand-in

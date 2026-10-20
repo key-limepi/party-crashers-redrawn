@@ -17,7 +17,8 @@
     // nyan cyat dev only
     const KILLER_ROSTER = [
       { id: 'evil', name: 'EVIL LUX', nameImg: './Assets/Images/UI/CharacterSelect/eluxname.png' },
-      { id: 'bear5', name: 'BEAR5', nameImg: CS + 'bear5name.jpeg', dev: true },
+      { id: 'bear5', name: 'BEAR5', nameImg: CS + 'bear5name.jpeg' },
+      { id: 'shadowmario', name: 'SHADOW MARIO', nameImg: CS + 'shadowmarioname.png' },
     ];
     function visRoster() {
       const list = ROSTER.filter((c) => (net.mod || !devChars[c.id]));
@@ -28,6 +29,20 @@
     }
     // preview blurbs, true to kit
     let CHAR_INFO = {};
+    const csPrevInfo = document.getElementById('csPrevInfo');
+    function fitPreviewInfo() {
+      if (!csPrevInfo) return;
+      const baseSize = parseFloat(getComputedStyle(csPrevInfo).fontSize) || 13;
+      for (const line of csPrevInfo.children) {
+        let size = baseSize;
+        line.style.fontSize = `${size}px`;
+        while (line.scrollWidth > line.clientWidth + 1 && size > 7) {
+          size = Math.max(7, size - 0.5);
+          line.style.fontSize = `${size}px`;
+        }
+      }
+    }
+    window.addEventListener('resize', fitPreviewInfo);
     fetch('./chars.txt').then((r) => r.text()).then((txt) => {
       // section per id, # comments
       let cur = null;
@@ -46,6 +61,7 @@
           if (parts.length >= 3) CHAR_INFO[cur].moves.push([parts[0], parts[1], parts.slice(2).join('|')]);
         }
       }
+      if (csPrevInfo) csPrevInfo.dataset.char = '';
       if (selectOpen) renderSelect(); // fill preview now
     }).catch(() => {}); // no cards, game goes on
     let revealUntil = 0; // reveal timer
@@ -102,7 +118,15 @@
       return true;
     }
     function runFrameFor(charId, evil) {
-      if (evil) return charId === 'bear5' ? bear5Image.src : EVIL_RUN[csFrame % EVIL_RUN.length];
+      if (evil) {
+        if (charId === 'bear5') return bear5Image.src;
+        if (charId === 'shadowmario') {
+          const frame = shadowMarioSprites.run[csFrame % shadowMarioSprites.run.length];
+          if (frame && frame.complete && frame.naturalWidth) return frame.src;
+          return shadowMarioSprites.idle[0].src;
+        }
+        return EVIL_RUN[csFrame % EVIL_RUN.length];
+      }
       if (charId === 'supersonic') charId = 'sonic'; // disguised in select
       const set = charSprites[charId];
       let run = set && set.run && set.run[csFrame % set.run.length];
@@ -171,7 +195,7 @@
       }
       // preview card
       const info = CHAR_INFO[cur.id];
-      const prevInfo = document.getElementById('csPrevInfo');
+      const prevInfo = csPrevInfo;
       if (prevInfo && prevInfo.dataset.char !== cur.id) {
         prevInfo.dataset.char = cur.id;
         const lines = info ? [`${info.desc}`] : [];
@@ -183,6 +207,7 @@
           div.textContent = ln;
           prevInfo.appendChild(div);
         }
+        fitPreviewInfo();
       }
       const evilLocked = !!(game.player && game.player.evil) || net.phase === 'round';
       document.getElementById('csLeft').style.display = evilLocked ? 'none' : '';

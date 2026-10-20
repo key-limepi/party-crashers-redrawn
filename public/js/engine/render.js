@@ -82,6 +82,26 @@ Object.assign(PlatformerEngine.prototype, {
       if (ti && ti.complete && ti.naturalWidth) this.drawContent(ctx, ti, Math.round(t.x), Math.round(t.y + BOMB_R), BOMB_DH);
       else { ctx.fillStyle = '#333'; ctx.fillRect(Math.round(t.x) - BOMB_R, Math.round(t.y) - BOMB_R, BOMB_R * 2, BOMB_R * 2); }
     }
+    // Mario fireballs are short-lived, straight moving projectiles.
+    const nowMs = Date.now();
+    this.marioFireballs = (this.marioFireballs || []).filter((f) => f.mine
+      ? nowMs - f.start < 7000
+      : nowMs - (f.syncedAt || f.start) < 500);
+    for (const f of this.marioFireballs) {
+      const frames = marioSprites.fireball;
+      const age = Math.max(0, nowMs - f.start);
+      const img = frames[Math.floor(age / 65) % frames.length];
+      if (!img || !img.complete || !img.naturalWidth) continue;
+      const extrapolate = Math.min(0.07, Math.max(0, (nowMs - (f.syncedAt || nowMs)) / 1000));
+      const x = f.x + f.vx * extrapolate;
+      const y = f.y + f.vy * extrapolate + 750 * extrapolate * extrapolate;
+      const w = 18, h = 18;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(age * 0.018);
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.restore();
+    }
     // boom pops
     if (window.FX_ON !== false) for (const b of this.booms) {
       const img = b.img || this.boomImg;
@@ -174,8 +194,9 @@ Object.assign(PlatformerEngine.prototype, {
         // cower shake
         const scare = (b.cowering || b.tremble) ? Math.floor(Math.random() * 3) - 1 : 0;
         const fs = this.frameSize(b, img);
-        const scaleX = b.char === 'bear5' ? (b.bearDrawScaleX || 1) : 1;
-        const scaleY = b.char === 'bear5' ? (b.bearDrawScaleY || 1) : 1;
+        const mimicScale = b.shadowMimicScale || 1;
+        const scaleX = (b.char === 'bear5' ? (b.bearDrawScaleX || 1) : 1) * mimicScale;
+        const scaleY = (b.char === 'bear5' ? (b.bearDrawScaleY || 1) : 1) * mimicScale;
         const dw = Math.max(1, Math.round(fs.dw * scaleX));
         const dh = Math.max(1, Math.round(fs.dh * scaleY));
         // use visual center
@@ -321,7 +342,8 @@ Object.assign(PlatformerEngine.prototype, {
         }
         // evil name
         // afk tag
-        const evilTag = b.isRemote && b.evil;
+        const disguisedKiller = b.isRemote && b.evil && b.char === 'shadowmario' && !!b.mimic;
+        const evilTag = b.isRemote && b.evil && !disguisedKiller;
         const afkTag = b.isRemote && b.away;
         ctx.fillStyle = evilTag ? '#ff4757' : '#fff';
         ctx.font = `${evilTag ? 'bold 13px' : '11px'} "Comic Sans MS", "Comic Sans", cursive`;
@@ -330,7 +352,7 @@ Object.assign(PlatformerEngine.prototype, {
         ctx.lineWidth = 3;
         ctx.strokeStyle = '#1a1b26';
         const label = evilTag ? `EVIL ${String(b.name || 'friend')}` :
-          b.isRemote ? String(b.name || 'friend') : `${Math.ceil((b.hp ?? 0) + Math.max(0, b.shield || 0))}`;
+          b.isRemote ? String(disguisedKiller ? (b.mimicName || b.name || 'friend') : (b.name || 'friend')) : `${Math.ceil((b.hp ?? 0) + Math.max(0, b.shield || 0))}`;
         const labelText = afkTag ? `${label} [AFK]` : label;
         ctx.strokeText(labelText, bx + bw / 2, by - 4);
         ctx.fillText(labelText, bx + bw / 2, by - 4);

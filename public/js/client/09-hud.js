@@ -1,13 +1,21 @@
     // evil kit
     // weak pull
     // wound ticking ropes
-    const PULL_RANGE = 450;
+    const PULL_RANGE = 350;
+    const EVIL_HP = 220;
+    const SHADOW_MARIO_HP = 300;
+    const SHADOW_MARIO_DRAW_W = 46, SHADOW_MARIO_DRAW_H = 64;
+    const EVIL_SPEED = 300;
+    const SHADOW_MARIO_SPEED = EVIL_SPEED * 1.5;
+    const SHADOW_MIMIC_SPEED = { sonic: 270, supersonic: 270, nyan: 300 };
+    const EVIL_SNEAK_SPEED = 430;
     // lms buffs
     const LMS_HP = 150; // more health
     const LMS_CD = 0.6; // faster cds
     const K = {
       spikeCD: 0, sneakCD: 0, pullCD: 0, rushCD: 0, m1CD: 0, m1ok: true,
       invisUntil: 0, penaltyUntil: 0, pullUntil: 0, pullHit: false, pullWindup: 0,
+      pullTarget: null, pullCastAt: 0, pullDamage: 0, pullPending: 0, pullSequence: 0, pullEnding: false, pullLastHitAt: 0,
       windupUntil: 0, chargeUntil: 0, charging: false,
     };
     const trippedIds = new Set(); // used spikes
@@ -98,6 +106,13 @@
     }
     // blank slots
     const AB = './Assets/Images/UI/Abilities/';
+    const PRAY_EFFECT = {
+      grace: '+HEAL',
+      haste: '+SPD, +CD',
+      shelter: '-SPD, -DMG',
+      burden: '-SPD, -CD',
+      frailty: '+SPD, +DMG',
+    };
     const ABIL_ICONS = {
       hit: null,
       blank: AB + 'ability_blank.png',
@@ -127,6 +142,12 @@
       if (p.evil) {
         if (net.killerPick === 'bear5') {
           abilDefs = [{ key: 'Z', name: 'M1', icon: ABIL_ICONS.bear5m1, cd: () => 0 }];
+        } else if (net.killerPick === 'shadowmario') {
+          abilDefs = [
+            { key: 'X', name: 'SLAM', icon: ABIL_ICONS.blank, cd: () => SM.slamCD },
+            { key: 'C', name: 'MIMIC', icon: ABIL_ICONS.blank, cd: () => SM.mimicCD },
+            { key: 'V', name: 'DIVE', icon: ABIL_ICONS.blank, cd: () => SM.diveCD },
+          ];
         } else {
           abilDefs = [
             { key: 'X', name: 'SPIKES', icon: ABIL_ICONS.spikes, cd: () => K.spikeCD },
@@ -168,14 +189,14 @@
         ];
       } else if (isMario()) {
         abilDefs = [
-          { key: 'Z', name: 'UPPERCUT', icon: null, cd: () => MU.upperCD },
+          { key: 'Z', name: 'FIREBALL', icon: null, cd: () => MU.fireballCD },
           { key: 'X', name: 'SPIN', icon: null, cd: () => MU.spinCD },
         ];
       } else {
         abilDefs = [
           { key: 'Z', name: 'PRAY', icon: ABIL_ICONS.pray, cd: () => L.prayCD },
           { key: 'X', name: 'ADRENALINE', icon: ABIL_ICONS.adrenaline, cd: () => L.adCD },
-          { key: 'C', name: 'OVERHEAL', icon: ABIL_ICONS.overheal, cd: () => L.overCD },
+          { key: 'C', name: 'PATCH', icon: ABIL_ICONS.overheal, cd: () => L.overCD },
         ];
       }
       abilBar.innerHTML = '';
@@ -204,12 +225,15 @@
       p.evil = evil;
       if (evil) {
         const bear = net.killerPick === 'bear5';
-        p.char = bear ? 'bear5' : 'evil';
-        game.setPlayerSprites(bear ? bear5Sprites : evilSprites);
-        p.drawW = bear ? 76 : 50; p.drawH = bear ? 94 : 70; // full size
-        p.maxHp = bear ? 999 : 250; p.hp = bear ? 999 : 250;
+        const shadowMario = net.killerPick === 'shadowmario';
+        p.char = bear ? 'bear5' : shadowMario ? 'shadowmario' : 'evil';
+        game.setPlayerSprites(bear ? bear5Sprites : shadowMario ? shadowMarioSprites : evilSprites);
+        p.drawW = bear ? 76 : shadowMario ? SHADOW_MARIO_DRAW_W : 50;
+        p.drawH = bear ? 94 : shadowMario ? SHADOW_MARIO_DRAW_H : 70;
+        p.maxHp = bear ? 999 : shadowMario ? SHADOW_MARIO_HP : EVIL_HP;
+        p.hp = p.maxHp;
         p.maxJumps = 2;
-        game.moveSpeed = bear ? 820 : 300; // evil speed
+        game.moveSpeed = bear ? 820 : shadowMario ? SHADOW_MARIO_SPEED : EVIL_SPEED; // killer speed
         // bear5 fast no fly
         game.fly = false;
         game.noclip = false;
@@ -234,7 +258,7 @@
       const now = Date.now();
       const p = game.player;
       if (!p || !net.id) return;
-      const role = p.evil ? (net.killerPick === 'bear5' ? 'bear5' : 'evil') : (isNyan() ? 'nyan' : isToko() ? 'toko' : (isSonic() ? 'sonic' : (isSuper() ? (SS.transformed ? 'super' : 'super0') : (isTails() ? 'tails' : (isMario() ? 'mario' : 'lux')))));
+      const role = p.evil ? (net.killerPick === 'bear5' ? 'bear5' : net.killerPick === 'shadowmario' ? 'shadowmario' : 'evil') : (isNyan() ? 'nyan' : isToko() ? 'toko' : (isSonic() ? 'sonic' : (isSuper() ? (SS.transformed ? 'super' : 'super0') : (isTails() ? 'tails' : (isMario() ? 'mario' : 'lux')))));
       if (role !== abilRole) {
         abilRole = role;
         buildAbilities();
@@ -248,19 +272,20 @@
           d.el.querySelector('.abName').textContent = `${bindLabel(game.input, 'C')} ${p.invis ? 'CANCEL' : 'SNEAK'}`;
         }
       }
-      // lux prayer tag, bottom left
+      // lux prayer tag, above abilities
       const prayEl = document.getElementById('prayLabel');
       if (prayEl) {
         if (!p.evil && isLux() && L.prayer && p.alive !== false) {
-          prayEl.textContent = `prayer of ${L.prayer}`;
+          prayEl.querySelector('.prayEffect').textContent = PRAY_EFFECT[L.prayer] || '';
+          prayEl.querySelector('.prayName').textContent = `prayer of ${L.prayer}`;
           prayEl.style.color = PRAY_COL[L.prayer] || '#fff';
-          if (prayEl.style.display !== 'block') prayEl.style.display = 'block';
+          if (prayEl.style.display !== 'flex') prayEl.style.display = 'flex';
         } else if (prayEl.style.display !== 'none') {
           prayEl.style.display = 'none';
         }
       }
       // trap count
-      const showSpikes = !!(p.evil && p.alive !== false && net.phase === 'round');
+      const showSpikes = !!(p.evil && net.killerPick === 'evil' && p.alive !== false && net.phase === 'round');
       spikeBar.style.display = showSpikes ? 'flex' : 'none';
       if (showSpikes) {
         const trapsLeft = Math.max(0, 5 - (game.spikes ? game.spikes.length : 0));

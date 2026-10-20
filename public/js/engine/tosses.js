@@ -1,5 +1,64 @@
 // bomb toss arcs
 Object.assign(PlatformerEngine.prototype, {
+  // fixed-step fireball motion keeps bounces stable across network tick rates
+  stepMarioFireball(shot, elapsed, target) {
+    const radius = 8, step = 1 / 120;
+    const circleHits = (cx, cy, left, top, right, bottom) => {
+      const nx = Math.max(left, Math.min(cx, right));
+      const ny = Math.max(top, Math.min(cy, bottom));
+      return (cx - nx) ** 2 + (cy - ny) ** 2 < radius ** 2;
+    };
+    let hit = false, blocked = false;
+    shot.stepRemainder += Math.max(0, Math.min(1.5, elapsed));
+    while (shot.stepRemainder + 1e-9 >= step && !hit && !blocked) {
+      shot.stepRemainder = Math.max(0, shot.stepRemainder - step);
+      shot.age += step;
+      const oldY = shot.y;
+      const nextX = shot.x + shot.vx * step;
+      for (const s of this.statics) {
+        if (s.semisolid) continue;
+        if (circleHits(nextX, shot.y, s.pos.x, s.pos.y, s.pos.x + s.w, s.pos.y + s.h)) {
+          blocked = true;
+          break;
+        }
+      }
+      if (blocked) break;
+      shot.x = nextX;
+      shot.vy += 1500 * step;
+      const nextY = shot.y + shot.vy * step;
+      let landed = false;
+      for (const s of this.statics) {
+        const left = s.pos.x, top = s.pos.y, right = left + s.w, bottom = s.pos.y + s.h;
+        const overlapsX = shot.x + radius > left && shot.x - radius < right;
+        if (!overlapsX) continue;
+        if (shot.vy > 0 && oldY + radius < top - 0.25 && nextY + radius >= top) {
+          shot.y = top - radius;
+          shot.vy = -440;
+          landed = true;
+          break;
+        }
+        if (!s.semisolid && shot.vy < 0 && oldY - radius >= bottom - 1 && nextY - radius <= bottom) {
+          shot.y = bottom + radius;
+          shot.vy = 180;
+          landed = true;
+          break;
+        }
+      }
+      if (!landed) {
+        shot.y = nextY;
+        for (const s of this.statics) {
+          if (!s.semisolid && circleHits(shot.x, shot.y, s.pos.x, s.pos.y, s.pos.x + s.w, s.pos.y + s.h)) {
+            blocked = true;
+            break;
+          }
+        }
+      }
+      if (target && circleHits(shot.x, shot.y, target.pos.x, target.pos.y, target.pos.x + target.w, target.pos.y + target.h)) hit = true;
+      if (shot.y - radius > this.fallY || (this.levelBounds && (shot.x + radius < 0 || shot.x - radius > this.levelBounds.w))) blocked = true;
+    }
+    return { hit, blocked, expired: blocked || shot.age >= 7 };
+  },
+
   // bomb toss arc
   addToss(x, y, vx, vy, img, id = null, throwerId = null) {
     // collides with walls

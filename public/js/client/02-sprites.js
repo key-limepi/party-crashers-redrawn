@@ -129,10 +129,12 @@
     const marioRun = [];
     for (let n = 1; n <= 8; n++) marioRun.push(loadImg(MARIO + `running_sprites/sprite-5-${n}.png`));
     const marioJump = loadImg(MARIO + "jump.png");
+    const marioFall = loadImg(MARIO + "fall.png");
+    const marioStun = loadImg(MARIO + "stun.png");
     const marioSpin = [1, 2, 3, 4].map((n) => loadImg(MARIO + `spinjump/sprite-42-${n}.png`));
     const marioLuma = [1, 2, 3, 4].map((n) => loadImg(MARIO + `luma_particle/sprite-41-${n}.png`));
-    const marioUpper = [loadImg(MARIO + "uppcercut/uppercut1.png"), loadImg(MARIO + "uppcercut/uppercut2.png")];
-    const marioCharge = [loadImg(MARIO + "uppcercut/uppercutcharge1.png"), loadImg(MARIO + "uppcercut/uppercutcharge2.png"), loadImg(MARIO + "uppcercut/uppercutcharge3.png")];
+    const marioFireballThrow = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => loadImg(MARIO + `fireball_throw/sprite-51-${n}.png`));
+    const marioFireball = [10, 11, 12, 13].map((n) => loadImg(MARIO + `fireball_particle/sprite-51-${n}.png`));
     const marioSprites = {
       idle: marioStand,
       idleFps: 8, // fast flip
@@ -141,11 +143,12 @@
       run: marioRun,
       runStride: 32, // slower flip
       jump: marioJump,
+      fall: marioFall,
       spin: marioSpin, // extra jump
       luma: marioLuma, // one-shot puff
-      upper: marioUpper, // rising fists
-      uppercharge: marioCharge, // crouch focus
-      stun: marioJump,
+      fireballThrow: marioFireballThrow,
+      fireball: marioFireball,
+      stun: marioStun,
       struggle: [marioWalk[0], marioWalk[1]],
       cower: marioStand[0],
       dash: marioRun[0],
@@ -185,8 +188,31 @@
       cower: bear5Image,
       dash: bear5Image,
     };
+    const SHADOW_MARIO = "./Assets/Images/Characters/Killers/ShadowMario/";
+    const shadowMarioWalk = Array.from({ length: 8 }, (_, i) =>
+      loadImg(SHADOW_MARIO + `shadow_mariowalk/sprite-18-${i + 1}.png`));
+    const shadowMarioSpin = [1, 2, 3, 4].map((n) =>
+      loadImg(SHADOW_MARIO + `shadowmario_spin/sprite-51-${n}.png`));
+    const shadowMarioSlam = [1, 2].map((n) =>
+      loadImg(SHADOW_MARIO + `shadowmario_slam${n}.png`));
+    const shadowMarioMimic = [15, 16, 17, 18].map((n) =>
+      loadImg(SHADOW_MARIO + `shadowmario_mimick/sprite-12-${n}.png`));
+    const shadowMarioSprites = {
+      idle: [loadImg(SHADOW_MARIO + "shadowmario_idle.png")],
+      walk: shadowMarioWalk,
+      run: shadowMarioWalk,
+      jump: loadImg(SHADOW_MARIO + "shadowmario_jump.png"),
+      fall: loadImg(SHADOW_MARIO + "shadowmario_fall.png"),
+      dive: loadImg(SHADOW_MARIO + "shadowmario_dive.png"),
+      spin: shadowMarioSpin,
+      slam: shadowMarioSlam,
+      mimic: shadowMarioMimic,
+      walkStride: 36,
+      runStride: 30,
+    };
     charSprites.evil = evilSprites;
     charSprites.bear5 = bear5Sprites;
+    charSprites.shadowmario = shadowMarioSprites;
     const evilWindup = [loadImg(EVIL + "m1idle.png"), loadImg(EVIL + "m1idle2.png"), loadImg(EVIL + "m1idle3.png")];
     const evilAct = {
       spike: loadImg(EVIL + "spikeplace1.png"),

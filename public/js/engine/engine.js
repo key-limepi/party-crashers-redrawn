@@ -289,7 +289,26 @@ class PlatformerEngine {
   // pop out
   resolveAxis(b, statics, axis, previousBottom = b.bottom) {
     let steppedUp = false;
+    // Semisolid art often has a one-pixel collider. Sweep the player's feet
+    // across a small landing depth so fast falls cannot skip its top surface.
+    const semiLandingDepth = 8;
+    let semiLanding = null;
+    if (axis === 'y' && b.vel.y >= 0) {
+      for (const s of statics) {
+        if (!s.semisolid || b.right <= s.left || b.left >= s.right) continue;
+        if (previousBottom <= s.top + semiLandingDepth && b.bottom >= s.top
+          && (!semiLanding || s.top < semiLanding.top)) semiLanding = s;
+      }
+    }
     for (const s of statics) {
+      if (axis === 'y' && s.semisolid) {
+        if (s === semiLanding) {
+          b.pos.y = s.top - b.h;
+          b.onGround = true;
+          b.vel.y = 0;
+        }
+        continue;
+      }
       if (!aabbOverlap(b, s)) continue;
       if (s.semisolid && axis === 'x') {
         if (steppedUp || b.vel.y < 0 || !(b.wasGround || b.onGround)) continue;
@@ -323,8 +342,6 @@ class PlatformerEngine {
         else b.pos.x = s.pos.x + s.w;
         b.vel.x = 0;
       } else {
-        // Land on top only
-        if (s.semisolid && (b.vel.y < 0 || previousBottom > s.top || b.bottom < s.top)) continue;
         const fromAbove = b.bottom - s.top; // top depth
         const fromBelow = s.bottom - b.top; // bottom depth
         if (b.vel.y > 0 || (b.vel.y === 0 && fromAbove <= fromBelow)) {
@@ -471,7 +488,9 @@ class PlatformerEngine {
       const dy = this.pullSrc.y - (p.pos.y + p.h / 2);
       const d = Math.hypot(dx, dy) || 1;
       // stop next to the killer instead of shaking on top of them
-      const pull = Math.max(0, Math.min(450 * dt, d - 36));
+      // Outpace survivor run speed so the rope draws its target inward instead
+      // of letting ordinary movement cancel the drag.
+      const pull = Math.max(0, Math.min(900 * dt, d - 36));
       p.pos.x += (dx / d) * pull;
       p.pos.y += (dy / d) * pull;
       p.vel.y = 0; // no stored up fall speed
@@ -514,7 +533,7 @@ class PlatformerEngine {
         if (sp.tripped) continue;
         if (Math.abs(cx - sp.x) < 30 && feet > sp.y - 24 && feet < sp.y + 10) {
           sp.tripped = true;
-          this.hurtPlayer(30);
+          this.hurtPlayer(25);
           p.stunT = Math.max(p.stunT || 0, 3);
           if (this.onSpikeTrip) this.onSpikeTrip(sp);
           break;

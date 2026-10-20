@@ -40,6 +40,7 @@ def players_snapshot(h, url):
             d["shield_hit"] = pl.get("shield_hit_at", 0) # last absorb sting
             d["char"] = pl.get("char")
             d["killer_char"] = pl.get("killer_char")
+            d["mimic_name"] = pl.get("mimic_name")
             d["malice"] = state.malice.get(pl["fid"], 0)
             d["paid"] = pl.get("paid")
             d["pay_msg"] = pl.get("pay_msg", "")
@@ -64,6 +65,7 @@ def players_snapshot(h, url):
             "vote_counts": vote_counts,
             "my_vote": my_vote,
             "phase": state.phase,
+            "lms": bool(state.lms_set),
             "time_left": max(0, int(state.phase_end - now)) if state.phase != "lobby" else 0,
             "grace": state.phase == "round" and now < state.round_start + GRACE_TIME,
             "killer_id": state.killer_id,

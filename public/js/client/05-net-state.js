@@ -43,7 +43,7 @@
       const tips = [
         `tip: lux prays (${bindLabel(game.input, 'Z')}) for a random blessing!!`,
         `tip: adrenaline (${bindLabel(game.input, 'X')}) is a 6s sprint, then you pant!!`,
-        `tip: overheal (${bindLabel(game.input, 'C')}) grants +50 blue hp to the neediest ally!!`,
+        `tip: patch (${bindLabel(game.input, 'C')}) shares +50 shield among nearby allies!!`,
         'tip: cower counters evil swings!!',
         'tip: watch the floor, spikes bite!!',
         'tip: tails bombs only blow up on evil!!',
@@ -52,7 +52,7 @@
         'tip: evil pull drags through walls!!',
         'tip: springs bounce you sky high!!',
         'tip: adrenaline ends in a 3s pant, plan the landing!!',
-        'tip: overheal waits 15s between casts!!',
+        'tip: patch waits 15s between casts!!',
         'tip: full blue hp still drains away!!',
         'tip: a whiffed toko jab staggers herself!!',
         'tip: sonic revs 3s before peelout!!',

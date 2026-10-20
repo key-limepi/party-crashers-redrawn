@@ -181,9 +181,9 @@
         if (fresh && data.phase === 'round') game.respawn(); // evil spawn
         clearTimeout(roleTimer);
         if (fresh && data.phase === 'round') fileSfx(SFX + 'going_into_round.wav', {});
-        if (fresh && data.phase === 'intro' && net.killerPick !== 'bear5') voiceSfx(vpick(VL_OPEN));
+        if (fresh && data.phase === 'intro' && net.killerPick === 'evil') voiceSfx(vpick(VL_OPEN));
         roleBox.textContent = amEvil
-          ? (net.killerPick === 'bear5' ? 'YOU ARE BEAR5!!' : fresh ? 'YOU ARE EVIL LUX!!' : 'YOU ARE EVIL NOW!!')
+          ? (net.killerPick === 'bear5' ? 'YOU ARE BEAR5!!' : net.killerPick === 'shadowmario' ? 'YOU ARE SHADOW MARIO!!' : fresh ? 'YOU ARE EVIL LUX!!' : 'YOU ARE EVIL NOW!!')
           : (fresh ? `you are ${(net.pick || 'lux').toUpperCase()}!! :D` : 'BACK TO NORMAL!!');
         roleBox.style.color = amEvil ? '#ff4757' : '#ffa502';
         roleBox.style.display = 'block';
@@ -213,10 +213,14 @@
           setTimeout(() => {
             if (net._introRound === data.round && net.phase === 'intro' && introWrap.style.display !== 'block') {
               introWrap.style.display = 'block';
-              const isBearIntro = others[data.killer_id]?.killer_char === 'bear5';
-              const vid = (isBearIntro ? bv : null) || introVid;
-              const other = vid === introVid ? bv : introVid;
-              if (other) { try { other.pause(); } catch (_) { /* hush!! */ } other.style.display = 'none'; }
+              const killerChar = others[data.killer_id]?.killer_char;
+              const sv = (typeof shadowMarioVid !== 'undefined') ? shadowMarioVid : null;
+              const vid = killerChar === 'bear5' ? bv : killerChar === 'shadowmario' ? sv : introVid;
+              for (const other of [introVid, bv, sv]) {
+                if (!other || other === vid) continue;
+                try { other.pause(); } catch (_) { /* hush!! */ }
+                other.style.display = 'none';
+              }
               if (vid) {
                 vid.style.display = '';
                 try { vid.currentTime = 0; } catch (_) { /* hush!! */ }
@@ -230,8 +234,10 @@
           introWrap.style.display = 'none';
           try { introVid.pause(); } catch (_) { /* hush!! */ }
           try { bv.pause(); } catch (_) { /* hush!! */ }
+          try { if (typeof shadowMarioVid !== 'undefined') shadowMarioVid.pause(); } catch (_) { /* hush!! */ }
           introVid.style.display = '';
           if (bv) bv.style.display = 'none';
+          if (typeof shadowMarioVid !== 'undefined') shadowMarioVid.style.display = 'none';
         }
       }
       // lms evil cinema
@@ -245,7 +251,7 @@
             cw.style.display = 'block';
             cw.style.opacity = '1'; // fade back in
             let cutGone = false;
-            const cutDone = () => {
+            const cutDone = (failed = false) => {
               if (cutGone) return;
               cutGone = true;
               cw.style.opacity = '0'; // fade out
@@ -257,16 +263,17 @@
                 fetch('/api/intro', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ id: net.id }),
+                  body: JSON.stringify({ id: net.id, failed }),
                 }).catch(() => {});
               }
             };
-            cv.onended = cutDone;
-            cv.onerror = cutDone; // missing file, skip ahead
+            cv.onended = () => cutDone();
+            cv.onerror = () => cutDone(true);
             cw.onclick = cutDone; // click skips
             cv.src = cut;
+            cv.load();
             try { cv.currentTime = 0; } catch (_) { /* hush!! */ }
-            cv.play().catch(cutDone); // blocked, skip ahead
+            cv.play().catch(() => cutDone(true));
           }
         } else if (cw && cw.style.display !== 'none') {
           cw.style.display = 'none';
@@ -379,11 +386,23 @@
         }
         r.lastPush = nowHist;
         r.name = d.name; r.facing = d.facing; r.hp = d.hp;
-        r.char = id === data.killer_id ? (d.killer_char || 'evil') : (d.char || 'lux');
+        const isRoundKiller = data.phase === 'round' && id === data.killer_id;
+        r.char = isRoundKiller ? (d.killer_char || 'evil') : (d.char || ((data.phase === 'lobby' || data.phase === 'intermission') ? lobbyCostume(id) : 'lux'));
+        if (r.char === 'shadowmario' && r._shadowDiveSampleAt) {
+          const sampleSeconds = Math.max(0.001, (nowHist - r._shadowDiveSampleAt) / 1000);
+          r._shadowDiveVy = (d.y - r._shadowDiveSampleY) / sampleSeconds;
+        }
+        if (r.char === 'shadowmario') {
+          r._shadowDiveSampleAt = nowHist;
+          r._shadowDiveSampleY = d.y;
+        }
         r.onGround = d.onGround ?? true;
         r.alive = d.alive ?? d.hp > 0;
-        r.evil = id === data.killer_id;
-        r.maxHp = d.maxhp || (r.evil && r.char === 'bear5' ? 999 : (r.evil ? 250 : 100)); // true bars
+        r.evil = isRoundKiller;
+        r.mimic = r.evil && r.char === 'shadowmario' ? d.mimic : null;
+        r.mimicName = r.evil && r.char === 'shadowmario' ? d.mimic_name : null;
+        r.moving = !!d.moving;
+        r.maxHp = d.maxhp || (r.evil && r.char === 'bear5' ? 999 : (r.evil && r.char === 'shadowmario' ? 300 : (r.evil ? EVIL_HP : 100))); // true bars
         r.shield = d.shield || 0; // temp hp
         r.super = !!d.super; // glowing or not
         r.rainbow = !!d.super; // gold bar
@@ -391,15 +410,17 @@
         r.forming = !!d.forming; // mid glow up
         r.tremble = !!d.forming;
         r.whiteFlash = !!d.forming;
+        r.holdingBomb = !!d.holding;
         // lobby face sync
-        const rface = (!d.char && (net.phase === 'lobby' || net.phase === 'intermission')) ? lobbyCostume(id) : (r.char || 'lux');
+        const rface = (!r.evil && !d.char && (data.phase === 'lobby' || data.phase === 'intermission')) ? lobbyCostume(id) : (r.char || 'lux');
         const luxDim = !r.evil && rface === 'lux' && !!d.aura_hot;
-        r.sprites = r.evil ? (r.char === 'bear5' ? bear5Sprites : evilSprites) : (r.char === 'supersonic' && !r.super && !r.forming ? sonicSprites : (r.char === 'tails' && r.holdingBomb ? tailsCarrySprites : (luxDim ? luxDimSprites : (charSprites[rface] || luxSprites)))); // see all
+        r.sprites = r.evil ? (r.char === 'bear5' ? bear5Sprites : r.char === 'shadowmario' ? (charSprites[r.mimic] || shadowMarioSprites) : evilSprites) : (r.char === 'supersonic' && !r.super && !r.forming ? sonicSprites : (r.char === 'tails' && r.holdingBomb ? tailsCarrySprites : (luxDim ? luxDimSprites : (charSprites[rface] || luxSprites)))); // see all
         // true size
-        const rkey = rface + (r.evil ? '*' : '') + (r.super ? '!' : '') + (r.forming ? '?' : '') + (r.holdingBomb ? 'h' : '') + (luxDim ? 'd' : '');
+        const rkey = rface + (r.evil ? '*' : '') + (r.mimic || '') + (r.super ? '!' : '') + (r.forming ? '?' : '') + (r.holdingBomb ? 'h' : '') + (luxDim ? 'd' : '');
         if (r._lastChar !== rkey) { r._baseFrame = null; r._lastChar = rkey; }
-        r.drawW = r.char === 'bear5' ? 76 : (!r.evil && rface === 'mario' ? 46 : 50);
-        r.drawH = r.char === 'bear5' ? 94 : (r.char === 'nyan' ? NYAN_H : (!r.evil && (rface === 'sonic' || rface === 'supersonic' || rface === 'tails' || rface === 'mario')) ? 64 : 70);
+        const mimicFace = r.mimic || rface;
+        r.drawW = r.char === 'bear5' ? 76 : (r.char === 'shadowmario' && !r.mimic ? 46 : (mimicFace === 'mario' ? 46 : 50));
+        r.drawH = r.char === 'bear5' ? 94 : (r.char === 'shadowmario' && !r.mimic ? 64 : (mimicFace === 'nyan' ? NYAN_H : (['sonic', 'supersonic', 'tails', 'mario'].includes(mimicFace)) ? 64 : 70));
         r.invis = !!d.invis;
         r.stunned = !!d.stunned;
         r.pull = !!d.pull;
@@ -412,16 +433,21 @@
         r.praying = !!d.praying;
         r.rushing = !!d.rushing;
         r.panting = !!d.panting;
+        if (!r.evil && r.char === 'lux' && r.alive && data.phase === 'round') {
+          if (r.praying && !r._wasPraying) fileSfx(LUX_SFX.prayer, { v: 0.32 });
+          if (r.rushing && !r._wasRushing) fileSfx(LUX_SFX.run, { v: 0.45 });
+          if (r.panting && !r._wasPanting) fileSfx(LUX_SFX.panting, { v: 0.16 });
+        }
         r.kickUntil = !!d.kickUntil;
         r.jabUntil = !!d.jabUntil;
         r.throwUntil = !!d.throwUntil;
-        r.holdingBomb = !!d.holding;
         r.dashing = !!d.dashing;
         r.away = !!d.away;
         r.inRound = !!d.in_round;
         r.redFlash = !!d.windup && !!r.evil; // red warning
         r.cyanFlash = !!d.windup && !r.evil; // cyan windup
         r.cowering = !!d.cower;
+        r.pullTarget = d.pulltarget || null;
         // synced animations (super sonic, evil rush, bear5 trail)
         const an = d.anim || null;
         r.trail = !!d.trail;
@@ -499,6 +525,9 @@
           r.pose = d.pose;
           r.poseUntil = Date.now() + 350;
           r.poseImg = poseImage(r.evil, r.char, d.pose, d.m1v);
+          if (!r.evil && r.char === 'lux' && d.pose === 'patch' && r.alive && data.phase === 'round') {
+            fileSfx(LUX_SFX.heal, { v: 0.48 });
+          }
           if (r.char === 'bear5' && d.pose === 'bear-fold') {
             r._bearFoldStart = Date.now();
             r._bearFoldDuration = 440;
@@ -512,6 +541,26 @@
           }
         } else if (!d.pose) {
           r.pose = null;
+        }
+        if (r.evil && r.char === 'shadowmario' && d.pose && d.pose.startsWith('sm')) {
+          if (r._shadowPose !== d.pose) {
+            r._shadowPose = d.pose;
+            r._shadowPoseStart = Date.now();
+          }
+          const elapsed = Date.now() - (r._shadowPoseStart || Date.now());
+          if (d.pose === 'smmimic') {
+            r.actionImg = shadowMarioSprites.mimic[Math.min(3, Math.floor(elapsed / 70))];
+            r.shadowMimicScale = elapsed < 420 ? 2.2 : 1;
+          }
+          else if (d.pose === 'smm1') {
+            r.actionImg = shadowMarioSprites.spin[Math.floor(elapsed / 85) % shadowMarioSprites.spin.length];
+          } else if (d.pose === 'smslam') r.actionImg = shadowMarioSprites.slam[Math.min(1, Math.floor(elapsed / 220))];
+          else if (d.pose === 'smslamland') r.actionImg = shadowMarioSprites.slam[1];
+          else if (d.pose === 'smdive') r.actionImg = (r._shadowDiveVy || 0) < -30 ? shadowMarioSprites.jump : shadowMarioSprites.dive;
+          r.actionT = 0.15;
+          r._shadowPoseActive = true;
+        } else if (r._shadowPoseActive) {
+          r.actionImg = null; r.actionT = 0; r._shadowPoseActive = false; r._shadowPose = null; r.shadowMimicScale = 1;
         }
         r._wasWindup = !!d.windup;
         // sync sonic flags
@@ -530,15 +579,30 @@
           r.poseImg = superSprites.transform[Math.floor(Date.now() / 200) % superSprites.transform.length];
           r.poseUntil = Date.now() + 150;
         }
-        // mario uppercut, play once
-        if (!r.evil && r.char === 'mario' && (d.pose === 'uppercharge' || d.pose === 'uppercut')) {
-          if (r._mupPose !== d.pose) { r._mupPose = d.pose; r._mupStart = Date.now(); }
-          const seq = d.pose === 'uppercharge' ? marioSprites.uppercharge : marioSprites.upper;
-          const per = d.pose === 'uppercharge' ? 333 : 600;
-          r.poseImg = seq[Math.min(seq.length - 1, Math.floor((Date.now() - r._mupStart) / per))];
+        // Mario's throw animation and observed fireball
+        if (!r.evil && r.char === 'mario' && d.pose === 'fireball') {
+          if (r._mfbPose !== d.pose) {
+            r._mfbPose = d.pose;
+            r._mfbStart = Date.now();
+          }
+          const age = Date.now() - r._mfbStart;
+          r.poseImg = marioSprites.fireballThrow[Math.min(marioSprites.fireballThrow.length - 1, Math.floor(age / 80))];
           r.poseUntil = Date.now() + 150;
-        } else if (r._mupPose) {
-          r._mupPose = null;
+        } else if (r._mfbPose) {
+          r._mfbPose = null;
+        }
+        const observedFireball = !r.evil && r.char === 'mario' && d.fireball;
+        const remoteShot = (game.marioFireballs ||= []).find((f) => !f.mine && f.owner === r.id);
+        if (observedFireball && observedFireball.id) {
+          const shot = remoteShot || { owner: r.id, mine: false, start: Date.now() };
+          if (shot.id !== observedFireball.id) shot.start = Date.now();
+          shot.id = observedFireball.id;
+          shot.x = observedFireball.x; shot.y = observedFireball.y;
+          shot.vx = observedFireball.vx; shot.vy = observedFireball.vy;
+          shot.syncedAt = Date.now();
+          if (!remoteShot) game.marioFireballs.push(shot);
+        } else if (remoteShot) {
+          game.marioFireballs = game.marioFireballs.filter((f) => f !== remoteShot);
         }
         const lostHp = r._lastHp !== undefined && r.hp < r._lastHp;
         const realHit = lostHp && r.hp < (r.maxHp || 100);
@@ -555,7 +619,7 @@
         }
         if (r._wasAlive && !r.alive && data.phase === 'round') {
           fileSfx(SFX + 'death.mp3', {}); // they died
-          if (!r.evil) voiceSfx(vpick(VL_KILL)); // killer brags
+          if (!r.evil && net.killerPick === 'evil') voiceSfx(vpick(VL_KILL)); // evil lux brags
         }
         // watcher lux fx, state driven
         if (!r.evil && r.alive && r.hp > 0 && data.phase === 'round') {
@@ -589,7 +653,7 @@
           if (r._wasPraying && !r.praying) game.luxGlow(ex, ey, '#ffe93b', 5, 120); // prayer lands
           if (r._wasRushing && !r.rushing) game.luxGlow(ex, r.pos.y + r.h - 8, '#ffffff', 4, 130); // skid stop
         }
-        r._wasPraying = !!r.praying; r._wasRushing = !!r.rushing;
+        r._wasPraying = !!r.praying; r._wasRushing = !!r.rushing; r._wasPanting = !!r.panting;
         r._wasAlive = !!r.alive;
         r._lastHp = r.hp;
         r._lastShield = r.shield || 0;
@@ -615,7 +679,7 @@
       // bonus hp gained sting
       if (mePick && (mePick.shield || 0) > (p.shield || 0) && p.alive !== false) {
         fileSfx(SFX + 'dash_release.wav', {});
-        sayStatus('overhealed!!', 2);
+        sayStatus('patched!!', 2);
         game.luxRing(p.pos.x + p.w / 2, p.pos.y + p.h / 2, '#ffd23f', 300); // empowered
         game.luxGlow(p.pos.x + p.w / 2, p.pos.y + p.h / 2, '#ffd23f', 6, 120);
       }
@@ -625,13 +689,17 @@
         if (!p.evil) wearChar(mePick.char === 'supersonic' && !SS.transformed ? 'sonic' : mePick.char);
       } else if (mePick && !mePick.char && net.pick) {
         net.pick = null;
-        if (!p.evil) wearChar('lux');
+        if (!p.evil) {
+          const lobbyChar = net.costume || lobbyCostume(net.id);
+          wearChar(lobbyChar);
+          game.moveSpeed = lobbyChar === 'sonic' ? 270 : 240;
+        }
       }
       // server truth
       if (!statusUntil || Date.now() > statusUntil) {
         netStatus.style.color = ''; // no error
         const mc = (mePick && mePick.char) || net.pick;
-        netStatus.textContent = p.evil ? (net.killerPick === 'bear5' ? 'YOU ARE BEAR5!!' : 'YOU ARE EVIL LUX!!')
+        netStatus.textContent = p.evil ? (net.killerPick === 'bear5' ? 'YOU ARE BEAR5!!' : net.killerPick === 'shadowmario' ? 'YOU ARE SHADOW MARIO!!' : 'YOU ARE EVIL LUX!!')
           : net.amKillerElect ? 'YOU WILL BE EVIL!!'
           : mc ? `you are ${mc.toUpperCase()}!! :D`
           : (net.id ? 'pick a character!!' : netStatus.textContent);
@@ -687,6 +755,8 @@
       let terrorT = nearestEvil === Infinity ? 0
         : Math.min(1, Math.max(0, 1 - Math.abs(nearestEvil - 380) / 280));
       if (chaseT > 0.05) terrorT = 0; // chase wins
+      const killerChar = others[data.killer_id]?.killer_char;
+      const shadowMarioDisguised = killerChar === 'shadowmario' && !!others[data.killer_id]?.mimic;
       // last survivor
       // lux anthem
       const survsLeft = (you?.in_round && p.alive !== false && !p.evil ? 1 : 0) +
@@ -709,7 +779,7 @@
       const lmsKey = luxLMS ? 'lmslux' : (sonicLMS ? 'lmssonic' : (tailsLMS ? 'lmstails' : (nyanLMS ? 'lmsnyan' : (marioLMS ? 'lmsmario' : (superLMS ? 'lmssonic' : 'lms')))));
       if (isLMS && lmsTrack !== lmsKey) {
         // start anthem
-        for (const k of ['chase', 'terror', 'map', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario']) {
+        for (const k of ['chase', 'terror', 'shadowmariochase', 'map', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario']) {
           beds[k].pause();
           try { beds[k].currentTime = 0; } catch (_) { /* hush!! */ }
         }
@@ -722,7 +792,7 @@
           const lmsHp = Math.max(LMS_HP, survHp());
           p.maxHp = superGlow ? SUPER_HP : lmsHp; p.hp = superGlow ? SUPER_HP : lmsHp;
           S.dashCD = 0; S.cowerCD = 0; L.prayCD = 0; L.adCD = 0; L.overCD = 0; T.kickCD = 0; T.jabCD = 0; TW.flyCD = 0; TW.bombCD = 0; TW.whipCD = 0; TW.bombsLeft = 5;
-          NY.rocketCD = 0; NY.dashCD = 0; MU.upperCD = 0;
+          NY.rocketCD = 0; NY.dashCD = 0; MU.fireballCD = 0;
           SS.boostCD = 0; SS.blockCD = 0; SS.spinCD = 0;
           fetch('/api/heal', {
             method: 'POST',
@@ -741,9 +811,14 @@
       }
       // block chase
       if (isLMS) { chaseT = 0; terrorT = 0; }
+      let shadowMarioChaseT = 0;
+      if (killerChar === 'shadowmario' && !shadowMarioDisguised && data.phase === 'round'
+        && (chaseT > 0.05 || terrorT > 0.05)) {
+        shadowMarioChaseT = Math.max(chaseT, terrorT);
+        chaseT = 0; terrorT = 0;
+      }
       // bear5 uses own themes
       let bear5ChaseT = 0;
-      const killerChar = others[data.killer_id]?.killer_char;
       const isBear5Killer = killerChar === 'bear5';
       if (isBear5Killer && p.alive !== false && data.phase === 'round'
         && (chaseT > 0.05 || terrorT > 0.05 || K.charging || Date.now() < K.windupUntil || Date.now() < K.pullUntil)) {
@@ -765,14 +840,15 @@
         ['chase', chaseT, 0.9],
         ['terror', terrorT, 0.9],
         ['bear5chase', bear5ChaseT, 0.9],
+        ['shadowmariochase', shadowMarioChaseT, 0.9],
         ['inter', data.phase === 'intermission' ? 1 : 0, 0.3],
         ['charselect', selectOpen && data.phase === 'select' ? 1 : 0, 0.4],
         ['map', data.phase === 'round' ? 1 : 0, 0.12],
         ['wait', data.phase === 'lobby' ? 1 : 0, 0.3],
       ];
-      const bedT = { map: 0, wait: 0, inter: 0, lms: 0, lmslux: 0, lmssonic: 0, lmstails: 0, lmsnyan: 0, lmsmario: 0, hero: 0, chase: 0, terror: 0, bear5chase: 0, charselect: 0 };
+      const bedT = { map: 0, wait: 0, inter: 0, lms: 0, lmslux: 0, lmssonic: 0, lmstails: 0, lmsnyan: 0, lmsmario: 0, hero: 0, chase: 0, terror: 0, bear5chase: 0, shadowmariochase: 0, charselect: 0 };
       const win = cands.find((c) => c[1] > 0.05);
-      if (win) bedT[win[0]] = win[2] * (win[0] === 'chase' || win[0] === 'terror' ? win[1] : 1);
+      if (win) bedT[win[0]] = win[2] * (win[0] === 'chase' || win[0] === 'terror' || win[0] === 'shadowmariochase' ? win[1] : 1);
       if (document.hidden) for (const k in bedT) bedT[k] = 0; // mute hidden
       for (const [key, a] of Object.entries(beds)) {
         // pause means silent
@@ -820,10 +896,11 @@
       // stun sting
       if (p.evil && (p.stunT || 0) > (p._lastStun || 0)) {
         fileSfx(SFX + 'basic_hit.wav', {});
+        hurtVignette('black');
       }
       p._lastStun = p.stunT || 0;
       // words on recovery
-      if (p.evil && (p._wasStun || 0) > 0 && (p.stunT || 0) <= 0 && p.alive !== false && data.phase === 'round') {
+      if (p.evil && net.killerPick === 'evil' && (p._wasStun || 0) > 0 && (p.stunT || 0) <= 0 && p.alive !== false && data.phase === 'round') {
         voiceSfx(vpick(VL_STUN));
       }
       p._wasStun = p.stunT || 0;
@@ -871,7 +948,7 @@
       }
       if (latest.v === net.id) {
         // i ate it
-        hurtVignette();
+        if (!t.p.evil) hurtVignette('red');
         fileSfx(SFX + 'ouch!.mp3', { v: 1 }); // loud on purpose
         return;
       }
@@ -892,11 +969,12 @@
       hitPopT = setTimeout(() => { hitPop.style.display = 'none'; }, 1200);
     }
 
-    function hurtVignette() {
+    function hurtVignette(color) {
       if (!hurtFlash) return;
+      hurtFlash.classList.toggle('black', color === 'black');
       hurtFlash.style.transition = 'none';
       hurtFlash.style.opacity = '1';
-      void hurtFlash.offsetWidth; // snap to full red
+      void hurtFlash.offsetWidth; // restart flash at full opacity
       hurtFlash.style.transition = '';
       hurtFlash.style.opacity = '0';
     }
