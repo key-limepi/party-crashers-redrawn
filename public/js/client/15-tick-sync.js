@@ -1049,7 +1049,7 @@
             if (Math.abs(t.x - fx) < 40 && Math.abs(t.y - fy) < 50) {
               t.boomed = true; t.landed = true; t.dead = true;
               game.addBoom(t.x, t.y);
-              fileSfx(SFX + 'explode.mp3', {});
+              fileSfx(SFX + 'explode.mp3', { v: 0.4 });
               if (t.throwerId && t.throwerId === net.id) {
                 fetch('/api/bomb', {
                   method: 'POST',

@@ -7,7 +7,7 @@
     game.onCounter = () => {
       // eat hits
       S.countered = true;
-      fileSfx(SFX + 'basic_hit.wav', {}); // counter sting
+      fileSfx(SFX + 'basic_hit.wav', { v: 0.3 }); // counter sting
       if (net.ekid) {
         fetch('/api/hit', {
           method: 'POST',
@@ -110,7 +110,7 @@
       const me = game.player;
       if (!me || !me.evil) return;
       boomedIds.add(bb.id);
-      fileSfx(SFX + 'explode.mp3', {});
+      fileSfx(SFX + 'explode.mp3', { v: 0.4 });
       game.addBoom(bb.x, bb.y - 20);
       if (net.id) {
         const pdx = Math.sign((me.pos.x + me.w / 2) - bb.x) || 1;
@@ -173,5 +173,5 @@
           }
         }
       }
-      fileSfx(SFX + 'explode.mp3', {});
+      fileSfx(SFX + 'explode.mp3', { v: 0.4 });
     };

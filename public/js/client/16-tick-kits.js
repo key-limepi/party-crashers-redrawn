@@ -487,7 +487,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id: net.id, victim: r.id, dmg: 50, stun: 0, ability: true }),
               }).catch(() => {});
-              fileSfx(SFX + 'm1_hit.wav', { rate: 0.7 }); // slam sound
+              fileSfx(SFX + 'm1_hit.wav', { rate: 0.7, v: 0.4 }); // slam sound
               hitBurst(r.pos.x + r.w / 2, r.pos.y + r.h / 2, true, true); // slam chunks
               p.stunT = 3 * (game.stunScale || 1);
               K.charging = false; p.chargeDir = 0;
