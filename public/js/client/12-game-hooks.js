@@ -59,7 +59,8 @@
       sunsetShade.style.opacity = (game.activeMap === 'main' && game.mapId === 'greenhill') ? 0.22 : 0;
       // walking feet loop
       if (p && p.alive !== false && p.onGround && Math.abs(p.vel.x) > 60) {
-        stepLoop.rate(0.4 + Math.abs(p.vel.x) / 900); // slower steps
+        const isShadowMario = p.evil && net.killerPick === 'shadowmario';
+        stepLoop.rate((isShadowMario ? 0.35 : 0.4) + Math.abs(p.vel.x) / 900);
         stepLoop.start();
       } else stepLoop.stop();
       if (posdbg.style.display !== 'none' && game.player) {

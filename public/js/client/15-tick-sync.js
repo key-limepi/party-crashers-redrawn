@@ -14,6 +14,20 @@
       try { bed.src = audioSrc(MUS + file); bed.currentTime = 0; } catch (_) { /* hush!! */ }
     }
 
+    function showDigipogSpend(round) {
+      const cost = net.me && net.me.round_cost ? net.me.round_cost : 15;
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);z-index:999;pointer-events:none;font-size:clamp(24px,5vw,48px);color:#2ed573;-webkit-text-stroke:2px #000;paint-order:stroke fill;opacity:0;transition:opacity 0.3s;';
+      el.textContent = `-${cost} digipogs`;
+      document.body.appendChild(el);
+      fileSfx(SFX + 'character_selection.wav', { v: 0.3 });
+      requestAnimationFrame(() => { el.style.opacity = '1'; });
+      setTimeout(() => {
+        el.style.opacity = '0';
+        setTimeout(() => el.remove(), 300);
+      }, 1000);
+    }
+
     const mapVotePanel = document.getElementById('mapVote');
     let mapVoteOptions = '';
     function updateMapVote(data) {
@@ -118,6 +132,10 @@
         if (firstSync) doSwap();
         else if (typeof phaseFadeSwap === 'function') phaseFadeSwap(doSwap, 150);
         else doSwap();
+        // digipog spend notification: select -> intro means round cost charged
+        if (!firstSync && prevPhase === 'select' && data.phase === 'intro' && you && you.paid !== false) {
+          showDigipogSpend(data.round);
+        }
       }
       net.round = data.round;
       // round just ended, loading card
@@ -611,7 +629,7 @@
           spawnBearHitFx(r.pos.x + r.w / 2, r.pos.y + r.h / 2);
         }
         if (p.evil && realHit) {
-          fileSfx(net.killerPick === 'bear5' ? SFX + 'jumpscare.mp3' : SFX + 'm1_hit.wav', {});
+          fileSfx(net.killerPick === 'bear5' ? SFX + 'jumpscare.mp3' : SFX + 'm1_hit.wav', { v: 0.4 });
         }
         // shield hit sting killer
         if (p.evil && (d.shield_hit || 0) > (r._lastShieldHit || 0) && !r.evil && data.phase === 'round') {
@@ -952,7 +970,7 @@
       if (latest.v === net.id) {
         // i ate it
         if (!t.p.evil) hurtVignette('red');
-        fileSfx(SFX + 'ouch!.mp3', { v: 1 }); // loud on purpose
+        fileSfx(SFX + 'ouch!.mp3', { v: 0.5 });
         return;
       }
       let text = '';

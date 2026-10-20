@@ -46,6 +46,7 @@
         SM.slamCD = now + 15000;
         SM.slamActive = true; SM.slamStartedAt = now; SM.slamAirborne = true;
         SM.slamHitIds.clear();
+        SM.slamSound = fileSfx(SFX + 'slamflyupward.wav', { loop: true, v: 0.3 }); // start upward sound
         p.chargeDir = 0; p.vel.x *= 0.25; p.vel.y = -1800; p.noCutUntil = game.time + 1; p.onGround = false; p.rooted = false;
         setPose('smslam', 2600);
       } else if (ab === 'C' && now >= SM.mimicCD) {
@@ -101,6 +102,17 @@
       }
       if (SM.slamActive) {
         if (!p.onGround) SM.slamAirborne = true;
+        // deal damage mid-air
+        if (SM.slamAirborne) {
+          const cx = p.pos.x + p.w / 2, cy = p.pos.y + p.h / 2;
+          for (const victim of shadowVictims()) {
+            const dx = victim.pos.x + victim.w / 2 - cx, dy = victim.pos.y + victim.h / 2 - cy;
+            if (Math.hypot(dx, dy) <= 100 && !SM.slamHitIds.has(victim.id)) {
+              SM.slamHitIds.add(victim.id);
+              shadowHit(victim, 30, 1);
+            }
+          }
+        }
         if (SM.slamAirborne && p.onGround && now - SM.slamStartedAt > 140) {
           SM.slamActive = false; SM.slamRecoveryUntil = now + 300;
           p.chargeDir = 0; p.vel.x = 0; p.rooted = true;

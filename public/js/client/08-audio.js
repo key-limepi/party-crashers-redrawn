@@ -138,7 +138,7 @@
       heal: SFX + 'lux_healpatch.mp3',
     };
     const MARIO_JUMPS = [SFX + 'mario_jump.wav'];
-    game.onJump = (dbl) => { const mario = typeof isMario === 'function' && isMario() && game.player && !game.player.evil; fileSfx(mario ? vpick(MARIO_JUMPS) : SFX + 'jump.wav', mario ? { rate: dbl ? 1.3 : 1, v: 0.3 } : { rate: dbl ? 1.3 : 1 }); };
+    game.onJump = (dbl) => { const p = game.player; const isMarioChar = typeof isMario === 'function' && isMario() && p && !p.evil; const isShadowMarioChar = p && p.evil && net.killerPick === 'shadowmario'; fileSfx((isMarioChar || isShadowMarioChar) ? vpick(MARIO_JUMPS) : SFX + 'jump.wav', (isMarioChar || isShadowMarioChar) ? { rate: dbl ? 1.3 : 1, v: 0.3 } : { rate: dbl ? 1.3 : 1 }); };
     game.onHeal = (n) => {
       // sync heal
       if (!net.id || !game.player) return;
@@ -212,10 +212,10 @@
         },
       };
     }
-    const cowerLoop = loopSfx(SFX + 'cower_loop.wav', 0.35);
-    const pullLoop = loopSfx(SFX + 'pull_loop.wav', 0.35);
-    const flyLoop = loopSfx(SFX + 'tailsflightloop.mp3', 0.35);
-    const stepLoop = loopSfx(SFX + 'footsteploop.mp3', 0.25); // walking feet
+    const cowerLoop = loopSfx(SFX + 'cower_loop.wav', 0.3);
+    const pullLoop = loopSfx(SFX + 'pull_loop.wav', 0.3);
+    const flyLoop = loopSfx(SFX + 'tailsflightloop.mp3', 0.3);
+    const stepLoop = loopSfx(SFX + 'footsteploop.mp3', 0.2); // walking feet
     // evil lux talks
     const VL = './Assets/Sounds/EvilLuxVoicelines/';
     const vpick = (a) => a[Math.floor(Math.random() * a.length)];

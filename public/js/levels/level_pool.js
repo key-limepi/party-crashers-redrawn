@@ -32,7 +32,7 @@ const MAP_POOL = [
     backdrop: './Assets/Images/Levels/greenhill_bg.png',
     backdropShiftY: 480, // sunset sits above the ground
     background: '#4aa3e0',
-    music: 'GreenHill_TEMP.mp3',
+    music: 'Green-Grass-theme.mp3',
     spawn: { x: 620, y: 1875 }, // wide west ground
     evilSpawn: { x: 2400, y: 1747 }, // far east ground
     springs: [
