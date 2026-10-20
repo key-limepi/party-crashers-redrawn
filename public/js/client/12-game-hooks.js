@@ -4,6 +4,8 @@
     const FLY_CD = 27000; // after flight
     const BOMB_CD = 13500; // trap wait
     const WHIP_CD = 13500; // whip wait
+    let shadowMarioFootStep = 0; // alternate between two footstep files
+    let shadowMarioLastFoot = 0; // last footstep timestamp
     game.onCounter = () => {
       // eat hits
       S.countered = true;
@@ -62,8 +64,16 @@
         const isShadowMario = p.evil && net.killerPick === 'shadowmario';
         if (isShadowMario) {
           stepLoop.stop();
-          shadowMarioStepLoop.rate(0.3 + Math.abs(p.vel.x) / 1000);
-          shadowMarioStepLoop.start();
+          shadowMarioStepLoop.stop();
+          const now = Date.now();
+          const footInterval = Math.max(120, 350 - Math.abs(p.vel.x) / 3);
+          if (now - shadowMarioLastFoot > footInterval) {
+            shadowMarioLastFoot = now;
+            const footFile = shadowMarioFootStep++ % 2 === 0
+              ? SFX + 'footstep1shadowmario.wav'
+              : SFX + 'footstep2shadowmario.wav';
+            fileSfx(footFile, { v: 0.18 });
+          }
         } else {
           shadowMarioStepLoop.stop();
           stepLoop.rate(0.4 + Math.abs(p.vel.x) / 900);

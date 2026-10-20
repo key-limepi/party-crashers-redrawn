@@ -47,7 +47,7 @@
         SM.slamCD = now + 15000;
         SM.slamActive = true; SM.slamStartedAt = now; SM.slamAirborne = true;
         SM.slamHitIds.clear();
-        SM.slamSound = fileSfx(SFX + 'shadowmariodive.wav', { loop: false, v: 0.25 }); // upward sound (no loop)
+        SM.slamSound = fileSfx(SFX + 'slamflyupward.wav', { loop: true, v: 0.25 }); // upward sound, loops while airborne
         fileSfx(SFX + 'shadowmariosneak.wav', { v: 0.25 }); // slam start sound
         p.chargeDir = 0; p.vel.x *= 0.25; p.vel.y = -1800; p.noCutUntil = game.time + 1; p.onGround = false; p.rooted = false;
         setPose('smslam', 2600);
@@ -84,14 +84,14 @@
       if (!p.evil || !isShadowMario()) return;
       if (p.alive === false || data.phase !== 'round') {
         if (SM.diving) p.chargeDir = 0;
-        if (SM.slamSound) { SM.slamSound.stop(); SM.slamSound = null; }
+        if (SM.slamSound) { SM.slamSound.pause(); SM.slamSound = null; }
         SM.slamActive = false; SM.diving = false; p.shadowMimicScale = 1;
         SM.mimic = null; SM.mimicTarget = null; p.shadowMimicScale = 1; setShadowMarioLook(p, null);
         return;
       }
       if ((p.stunT || 0) > 0) {
         if (SM.diving) p.chargeDir = 0;
-        if (SM.slamSound) { SM.slamSound.stop(); SM.slamSound = null; }
+        if (SM.slamSound) { SM.slamSound.pause(); SM.slamSound = null; }
         SM.slamActive = false; SM.diving = false; p.shadowMimicScale = 1;
         p.actionImg = null; p.actionT = 0; setPose(null, 0);
         return;
@@ -120,7 +120,7 @@
           }
         }
         if (SM.slamAirborne && p.onGround && now - SM.slamStartedAt > 140) {
-          if (SM.slamSound) { SM.slamSound.stop(); SM.slamSound = null; }
+          if (SM.slamSound) { SM.slamSound.pause(); SM.slamSound = null; }
           fileSfx(SFX + 'slamimpact.wav', { v: 0.4 }); // impact sound
           SM.slamActive = false; SM.slamRecoveryUntil = now + 300;
           p.chargeDir = 0; p.vel.x = 0; p.rooted = true;
@@ -135,7 +135,7 @@
             }
           }
         } else if (now - SM.slamStartedAt > 2800) {
-          if (SM.slamSound) { SM.slamSound.stop(); SM.slamSound = null; }
+          if (SM.slamSound) { SM.slamSound.pause(); SM.slamSound = null; }
           SM.slamActive = false; SM.slamRecoveryUntil = now + 250;
           p.rooted = true; setPose('smslamland', 250);
           p.actionImg = shadowMarioSprites.slam[1]; p.actionT = 0.25;

@@ -159,9 +159,11 @@
       }
       try {
         const a = new Audio(audioSrc(src));
+        if (o && o.loop) a.loop = true;
         a.playbackRate = (o && o.rate) || 1;
         a.volume = Math.min(1, ((o && o.v) || 0.5) * ((window.SFX_VOL ?? 50) / 50));
         a.play().catch(() => {});
+        return a;
       } catch (e) { /* silent!! */ }
     }
     function voiceSfx(src, rate = 1) {
