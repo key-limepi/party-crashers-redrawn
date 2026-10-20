@@ -102,7 +102,7 @@ def bomb(h, data):
             now = time.time()
             k = state.players.get(state.killer_id)
             if k and k.get("alive", True) and k.get("hp", 250) > 0 \
-                    and (x - k.get("x", 0)) ** 2 + (y - k.get("y", 0)) ** 2 < 150 ** 2 \
+                    and (x - k.get("x", 0)) ** 2 + (y - k.get("y", 0)) ** 2 < 200 ** 2 \
                     and grace_over(now):
                 for tid in [t for t, o in state.bomb_tosses.items()
                             if (x - o["x"]) ** 2 + (y - o["y"]) ** 2 < 200 ** 2]:

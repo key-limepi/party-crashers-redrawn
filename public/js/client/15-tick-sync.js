@@ -1046,7 +1046,7 @@
           if (t.landed || t.dead || t.boomed) continue;
           for (const f of foes) {
             const fx = f.pos.x + f.w / 2, fy = f.pos.y + f.h / 2;
-            if (Math.abs(t.x - fx) < 40 && Math.abs(t.y - fy) < 50) {
+            if (Math.abs(t.x - fx) < 60 && Math.abs(t.y - fy) < 70) {
               t.boomed = true; t.landed = true; t.dead = true;
               game.addBoom(t.x, t.y);
               fileSfx(SFX + 'explode.mp3', { v: 0.4 });
