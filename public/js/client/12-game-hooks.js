@@ -60,9 +60,19 @@
       // walking feet loop
       if (p && p.alive !== false && p.onGround && Math.abs(p.vel.x) > 60) {
         const isShadowMario = p.evil && net.killerPick === 'shadowmario';
-        stepLoop.rate((isShadowMario ? 0.35 : 0.4) + Math.abs(p.vel.x) / 900);
-        stepLoop.start();
-      } else stepLoop.stop();
+        if (isShadowMario) {
+          stepLoop.stop();
+          shadowMarioStepLoop.rate(0.3 + Math.abs(p.vel.x) / 1000);
+          shadowMarioStepLoop.start();
+        } else {
+          shadowMarioStepLoop.stop();
+          stepLoop.rate(0.4 + Math.abs(p.vel.x) / 900);
+          stepLoop.start();
+        }
+      } else {
+        stepLoop.stop();
+        shadowMarioStepLoop.stop();
+      }
       if (posdbg.style.display !== 'none' && game.player) {
         posdbg.textContent = `x: ${Math.round(game.player.pos.x)} y: ${Math.round(game.player.pos.y)}`;
       }

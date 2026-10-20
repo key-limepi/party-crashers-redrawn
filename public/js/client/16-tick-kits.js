@@ -36,17 +36,19 @@
         if (SM.mimic) { SM.mimic = null; SM.mimicTarget = null; setShadowMarioLook(p, null); }
         SM.m1CD = now + 950;
         setPose('smm1', 420);
+        fileSfx(SFX + 'shadowmariosneak.wav', { v: 0.25 }); // M1 sound
         const victim = shadowFrontTarget(p);
         if (victim) {
           shadowHit(victim, 20).then((landed) => {
-            if (landed) fileSfx(SFX + 'm1_hit.wav', {});
+            if (landed) fileSfx(SFX + 'm1_hit.wav', { v: 0.3 });
           });
         }
       } else if (ab === 'X' && now >= SM.slamCD) {
         SM.slamCD = now + 15000;
         SM.slamActive = true; SM.slamStartedAt = now; SM.slamAirborne = true;
         SM.slamHitIds.clear();
-        SM.slamSound = fileSfx(SFX + 'slamflyupward.wav', { loop: true, v: 0.3 }); // start upward sound
+        SM.slamSound = fileSfx(SFX + 'shadowmariodive.wav', { loop: true, v: 0.25 }); // upward sound
+        fileSfx(SFX + 'shadowmariosneak.wav', { v: 0.25 }); // slam start sound
         p.chargeDir = 0; p.vel.x *= 0.25; p.vel.y = -1800; p.noCutUntil = game.time + 1; p.onGround = false; p.rooted = false;
         setPose('smslam', 2600);
       } else if (ab === 'C' && now >= SM.mimicCD) {
@@ -63,6 +65,7 @@
         setShadowMarioLook(p, SM.mimic);
         SM.mimicUntil = now + 420;
         setPose('smmimic', 420);
+        fileSfx(SFX + 'shadowmariosneak.wav', { v: 0.3 }); // mimic sound
       } else if (ab === 'V' && now >= SM.diveCD) {
         SM.diveCD = now + 12000;
         SM.diving = true; SM.diveHit = false; SM.diveUntil = now + 900;
@@ -72,6 +75,7 @@
         p.chargeDir = p.facing; p.chargeSpeed = 720; p.rooted = false;
         p.vel.y = p.onGround ? -500 : Math.max(p.vel.y || 0, 180);
         setPose('smdive', 900);
+        fileSfx(SFX + 'shadowmariodive.wav', { v: 0.35 }); // dive sound
       }
     }
 
@@ -80,12 +84,14 @@
       if (!p.evil || !isShadowMario()) return;
       if (p.alive === false || data.phase !== 'round') {
         if (SM.diving) p.chargeDir = 0;
+        if (SM.slamSound) { SM.slamSound.stop(); SM.slamSound = null; }
         SM.slamActive = false; SM.diving = false; p.shadowMimicScale = 1;
         SM.mimic = null; SM.mimicTarget = null; p.shadowMimicScale = 1; setShadowMarioLook(p, null);
         return;
       }
       if ((p.stunT || 0) > 0) {
         if (SM.diving) p.chargeDir = 0;
+        if (SM.slamSound) { SM.slamSound.stop(); SM.slamSound = null; }
         SM.slamActive = false; SM.diving = false; p.shadowMimicScale = 1;
         p.actionImg = null; p.actionT = 0; setPose(null, 0);
         return;
@@ -114,6 +120,8 @@
           }
         }
         if (SM.slamAirborne && p.onGround && now - SM.slamStartedAt > 140) {
+          if (SM.slamSound) { SM.slamSound.stop(); SM.slamSound = null; }
+          fileSfx(SFX + 'slamimpact.wav', { v: 0.4 }); // impact sound
           SM.slamActive = false; SM.slamRecoveryUntil = now + 300;
           p.chargeDir = 0; p.vel.x = 0; p.rooted = true;
           setPose('smslamland', 300);
@@ -127,6 +135,7 @@
             }
           }
         } else if (now - SM.slamStartedAt > 2800) {
+          if (SM.slamSound) { SM.slamSound.stop(); SM.slamSound = null; }
           SM.slamActive = false; SM.slamRecoveryUntil = now + 250;
           p.rooted = true; setPose('smslamland', 250);
           p.actionImg = shadowMarioSprites.slam[1]; p.actionT = 0.25;

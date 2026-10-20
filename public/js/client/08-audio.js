@@ -216,6 +216,7 @@
     const pullLoop = loopSfx(SFX + 'pull_loop.wav', 0.3);
     const flyLoop = loopSfx(SFX + 'tailsflightloop.mp3', 0.3);
     const stepLoop = loopSfx(SFX + 'footsteploop.mp3', 0.2); // walking feet
+    const shadowMarioStepLoop = loopSfx(SFX + 'footstep1shadowmario.wav', 0.18); // shadow mario feet
     // evil lux talks
     const VL = './Assets/Sounds/EvilLuxVoicelines/';
     const vpick = (a) => a[Math.floor(Math.random() * a.length)];
