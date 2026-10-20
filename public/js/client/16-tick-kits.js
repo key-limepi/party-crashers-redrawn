@@ -227,7 +227,7 @@
               castMario(p, now, ab);
               continue;
             }
-          const luxCdMult = () => (L.prayer === 'haste' ? 1.5 : L.prayer === 'burden' ? 0.7 : 1) * (isLMS ? LMS_CD : 1);
+          const luxCdMult = () => 1.1 * (L.prayer === 'haste' ? 1.5 : L.prayer === 'burden' ? 0.7 : 1) * (isLMS ? LMS_CD : 1);
           if (ab === 'Z' && now >= L.prayCD && !L.prayUntil && !L.rushing && !L.panting) {
             // kneel and pray, exposed
             L.prayUntil = now + 5000;
@@ -358,7 +358,7 @@
           K.pullHit = false;
           if (!target) {
             // drop ropes
-            p.stunT = Math.max(p.stunT || 0, 3);
+            p.stunT = Math.max(p.stunT || 0, 3 * (game.stunScale || 1));
             fileSfx(SFX + 'denied.wav', {});
             sayStatus('nobody around!!', 2);
           } else {
@@ -434,7 +434,7 @@
       if (p.evil && K.pullUntil && now >= K.pullUntil && p.alive !== false) {
         stopEvilPull(p);
         if (!K.pullHit) {
-          p.stunT = Math.max(p.stunT || 0, 3);
+          p.stunT = Math.max(p.stunT || 0, 3 * (game.stunScale || 1));
           fileSfx(SFX + 'denied.wav', {});
         }
       }
@@ -477,7 +477,7 @@
               }).catch(() => {});
               fileSfx(SFX + 'm1_hit.wav', { rate: 0.7 }); // slam sound
               hitBurst(r.pos.x + r.w / 2, r.pos.y + r.h / 2, true, true); // slam chunks
-              p.stunT = 3;
+              p.stunT = 3 * (game.stunScale || 1);
               K.charging = false; p.chargeDir = 0;
               break;
             }
@@ -534,14 +534,17 @@
         }
       }
       // fast ghost
-      if (p.evil) game.moveSpeed = isBear5() ? 820 : isShadowMario() ? (SM.mimic ? (SHADOW_MIMIC_SPEED[SM.mimic] || 240) : SHADOW_MARIO_SPEED) : p.invis ? EVIL_SNEAK_SPEED : EVIL_SPEED;
+      if (p.evil) {
+        const speed = isBear5() ? 820 : isShadowMario() ? (SM.mimic ? (SHADOW_MIMIC_SPEED[SM.mimic] || 240) : SHADOW_MARIO_SPEED) : p.invis ? EVIL_SNEAK_SPEED : EVIL_SPEED;
+        game.moveSpeed = speed * (now < (p.bombSlowUntil || 0) ? 0.5 : 1);
+      }
     }
 
     function tickLux(t) {
       let { p, data, isLMS, now } = t;
       // lux lightshard kit
       if (!p.evil && isLux()) {
-        const luxCdMult = () => (L.prayer === 'haste' ? 1.5 : L.prayer === 'burden' ? 0.7 : 1) * (isLMS ? LMS_CD : 1);
+        const luxCdMult = () => 1.1 * (L.prayer === 'haste' ? 1.5 : L.prayer === 'burden' ? 0.7 : 1) * (isLMS ? LMS_CD : 1);
         const pcx = p.pos.x + p.w / 2, pcy = p.pos.y + p.h / 2; // lux center
         // dim look, shard drains
         const dim = !!L.hot;
@@ -1024,7 +1027,7 @@
               T.jabCD = now + 10200 * (isLMS ? LMS_CD : 1); // fast recharge
             } else {
               T.jabCD = now + 16150 * (isLMS ? LMS_CD : 1); // slow whiff
-              p.stunT = Math.max(p.stunT || 0, 2);
+              p.stunT = Math.max(p.stunT || 0, 2 * (game.stunScale || 1));
               fileSfx(SFX + 'denied.wav', {}); // missed jab
             }
           }
@@ -1225,7 +1228,7 @@
             p.rooted = false;
             if (!TW.whipHit) {
               TW.whipCD = now + 22500 * (isLMS ? LMS_CD : 1); // slow whiff
-              p.stunT = Math.max(p.stunT || 0, 1);
+              p.stunT = Math.max(p.stunT || 0, 1 * (game.stunScale || 1));
               fileSfx(SFX + 'denied.wav', {}); // missed whip
             }
           }
@@ -1266,6 +1269,7 @@
       game.liftSrc = null;
       if (!p.evil && p.alive !== false && data.phase === 'round') {
         const jumpEdge = game.input.jump && !p._jumpPrev;
+        if (game.pullSrc) p._rideId = null;
         if (p._rideId) {
           // latched on
           const ride = game.remotes.find((r) => r.id === p._rideId && (r.peeling || r.lift) && r.alive && r.hp > 0);
@@ -1278,7 +1282,7 @@
           } else {
             game.peelSrc = { x: ride.pos.x + ride.w / 2, y: ride.pos.y - 10 };
           }
-        } else if (!game.input.jump && !(now < (p._dropRideUntil || 0))) {
+        } else if (!game.pullSrc && !game.input.jump && !(now < (p._dropRideUntil || 0))) {
           // fresh board
           const ride = game.remotes.find((r) => (r.peeling || r.lift) && r.alive && r.hp > 0 && !r.evil &&
             Math.abs(r.pos.x - p.pos.x) < 70 &&

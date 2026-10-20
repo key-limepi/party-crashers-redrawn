@@ -235,6 +235,7 @@ def overheal(h, data):
             return
         prayer = data.get("prayer")
         cd_mult = 1.5 if prayer == "haste" else 0.7 if prayer == "burden" else 1.0
+        cd_mult *= 1.1
         if state.lms_set:
             cd_mult *= 0.6
         requested_cooldown = OVERHEAL_CD * cd_mult
@@ -246,12 +247,14 @@ def overheal(h, data):
         
         # lux self shield bonus
         if state.lms_set:
-            me["shield"] = me.get("shield", 0) + 25
+            before_shield = min(OVERHEAL_BONUS, me.get("shield", 0))
+            shield_added = min(25, OVERHEAL_BONUS - before_shield)
+            me["shield"] = before_shield + shield_added
             me["shield_next"] = now + 0.5
             me["over_cd"] = now
             me["over_cd_duration"] = requested_cooldown
-            me["st_healed"] = me.get("st_healed", 0) + 25
-            print(f"!! {me['name']} LMS self-overhealed +25 shield!!", flush=True)
+            me["st_healed"] = me.get("st_healed", 0) + shield_added
+            print(f"!! {me['name']} LMS self-overhealed +{shield_added} shield!!", flush=True)
             h.send_json({"ok": True, "target": me["id"], "name": me["name"], "shield": me["shield"], "self_shield": me["shield"], "lms_self": True})
             return
         
@@ -268,14 +271,17 @@ def overheal(h, data):
             d2 = dx * dx + dy * dy
             if d2 > OVERHEAL_RADIUS * OVERHEAL_RADIUS:
                 continue
-            capacity = max(0, OVERHEAL_BONUS - pl.get("shield", 0))
+            pl["shield"] = min(OVERHEAL_BONUS, pl.get("shield", 0))
+            capacity = max(0, OVERHEAL_BONUS - pl["shield"])
             if capacity <= 0:
                 continue
             nearby.append((pid, pl, capacity))
 
         me["over_cd"] = now # only wins cost cooldown
         me["over_cd_duration"] = requested_cooldown
-        me["shield"] = me.get("shield", 0) + 25
+        me["shield"] = min(OVERHEAL_BONUS, me.get("shield", 0))
+        self_shield_added = min(25, OVERHEAL_BONUS - me["shield"])
+        me["shield"] += self_shield_added
         me["shield_next"] = now + 0.5
         targets = {}
         remaining = OVERHEAL_BONUS
@@ -289,7 +295,7 @@ def overheal(h, data):
                 share = base + (1 if index < extra else 0)
                 applied = min(capacity, share, remaining - applied_total)
                 if applied > 0:
-                    pl["shield"] = pl.get("shield", 0) + applied
+                    pl["shield"] = min(OVERHEAL_BONUS, pl.get("shield", 0) + applied)
                     pl["shield_next"] = now + 0.5
                     applied_total += applied
                     if pid in targets:
@@ -306,7 +312,7 @@ def overheal(h, data):
 
         target_list = list(targets.values())
         gave = sum(target["given"] for target in target_list)
-        me["st_healed"] = me.get("st_healed", 0) + 25 + gave
+        me["st_healed"] = me.get("st_healed", 0) + self_shield_added + gave
         names = ", ".join(target["name"] for target in target_list)
         print(f"!! {me['name']} patched {names or 'themself'} (+{gave} shared shield)!!", flush=True)
         response = {

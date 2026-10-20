@@ -1069,7 +1069,9 @@
         }
       }
       game.showAlerts = !!p.evil;
-      game.sneakArrows = !!(p.evil && p.invis);
+      game.sneakArrows = !!(p.evil && (p.invis || (isShadowMario() && SM.slamActive)));
+      const activeRoundPlayers = Object.values(data.players || {}).filter((player) => player.in_round).length;
+      game.stunScale = activeRoundPlayers < 3 ? 1 : Math.max(0.45, 2 / activeRoundPlayers);
       game.seeInvis = !!p.evil || p.alive === false;
       game.damageOn = !!net.id && (!net.phase || net.phase === 'round');
       game.lmsResist = !!(isLMS && !p.evil && p.alive !== false);

@@ -4,7 +4,7 @@ import time
 
 from .. import state
 from ..config import EVIL_PULL_RANGE, STUN_IFRAMES, TOUCH_COOLDOWN
-from ..game import grace_over, is_rocketing, note_death
+from ..game import grace_over, is_rocketing, note_death, scale_stun
 
 
 def hit(h, data):
@@ -40,6 +40,7 @@ def hit(h, data):
                 stun = max(0, min(5, float(data.get("stun", 0))))
             except (ValueError, TypeError):
                 stun = 0
+            stun = scale_stun(stun)
             # rocketing blocks damage
             if is_rocketing(data["victim"]):
                 h.send_json({"ok": True})
@@ -59,7 +60,7 @@ def hit(h, data):
                 # spared cower
                 if atk_evil and vic.get("cower", False):
                     if now - state.last_stun.get(data.get("id"), 0) >= STUN_IFRAMES:
-                        atk["stun_until"] = now + 2
+                        atk["stun_until"] = now + scale_stun(2)
                         state.last_stun[data.get("id")] = now
                     # shove back
                     _dx = atk.get("x", 0) - vic.get("x", 0)
@@ -98,7 +99,8 @@ def hit(h, data):
                     # stack stuns
                     if stun > 0:
                         if stack:
-                            vic["stun_until"] = min(max(vic.get("stun_until", 0), now) + stun, now + 6)
+                            vic["stun_until"] = min(max(vic.get("stun_until", 0), now) + stun,
+                                                     now + scale_stun(6))
                         else:
                             vic["stun_until"] = now + stun
                     # launchers punch through iframes

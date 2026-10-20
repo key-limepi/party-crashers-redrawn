@@ -41,6 +41,14 @@ def enemies_of(pid):
     return {p: pl for p, pl in alive_players().items() if (p == state.killer_id) != evil}
 
 
+def scale_stun(duration):
+    """Reduce stun duration as the round roster grows, with a 45% floor."""
+    active_count = len(state.round_players.intersection(state.players))
+    if active_count < 3:
+        return duration
+    return duration * max(0.45, 2 / active_count)
+
+
 def is_rocketing(pid):
     """a nyan riding its own rocket can't be hurt"""
     return any(rk["by"] == pid for rk in state.rockets.values())
@@ -287,7 +295,7 @@ def _expire_bombs(now):
     # expire bombs, refund fast
     for bid in list(bombs):
         bb = bombs[bid]
-        if now - bb.get("at", now) > 45:
+        if now - bb.get("at", now) > 24:
             del bombs[bid]
             owner = bb.get("owner")
             if owner and isinstance(owner, str):

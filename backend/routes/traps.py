@@ -5,7 +5,7 @@ import time
 from .. import state
 from ..admins import is_admin
 from ..config import ROCKET_DMG, ROCKET_GAP, ROCKET_RADIUS, ROCKET_UP, SPIKE_MAX
-from ..game import enemies_of, grace_over, is_rocketing, note_death
+from ..game import enemies_of, grace_over, is_rocketing, note_death, scale_stun
 
 
 def spike(h, data):
@@ -107,8 +107,9 @@ def bomb(h, data):
                 for tid in [t for t, o in state.bomb_tosses.items()
                             if (x - o["x"]) ** 2 + (y - o["y"]) ** 2 < 200 ** 2]:
                     del state.bomb_tosses[tid]
-                k["hp"] = max(0, k.get("hp", 250) - 30)
-                k["stun_until"] = max(k.get("stun_until", 0), now + 5)
+                bomb_damage = 30 if state.lms_set else 10
+                k["hp"] = max(0, k.get("hp", 250) - bomb_damage)
+                k["stun_until"] = max(k.get("stun_until", 0), now + scale_stun(2.5))
                 _dx = k.get("x", 0) - x
                 _dy = k.get("y", 0) - y
                 _dist = (_dx * _dx + _dy * _dy) ** 0.5 or 1
@@ -124,34 +125,25 @@ def bomb(h, data):
             bb = state.bombs.pop(data["bomb"])
             now = time.time()
             if data.get("id") == state.killer_id and me:
+                bomb_damage = 30 if state.lms_set else 10
                 before = me.get("hp", 250)
-                me["hp"] = max(0, before - 30)
-                landed = min(30, before) # applied only
+                me["hp"] = max(0, before - bomb_damage)
+                landed = min(bomb_damage, before) # applied only
                 me["st_taken"] = me.get("st_taken", 0) + landed
                 owner = state.players.get(bb.get("owner"))
                 if owner:
                     owner["st_dealt"] = owner.get("st_dealt", 0) + landed
-                # bomb stun decays over time
-                bomb_age = max(0, now - bb.get("at", now))
-                bomb_stun = max(2.0, 5.0 - (bomb_age / 15))
-                me["stun_until"] = max(me.get("stun_until", 0), now + bomb_stun)
-                try:
-                    push = float(data.get("dx", 0) or 0)
-                except (ValueError, TypeError):
-                    push = 0
-                me["kb"] = {"x": -push, "y": -0.4,
-                            "at": now, "s": 2}
                 if me["hp"] <= 0:
                     me["alive"] = False
                     if owner:
                         owner["st_kills"] = owner.get("st_kills", 0) + 1
                     note_death(me, now)
-                print(f"!! {me['name']} ate a bomb (age {bomb_age:.1f}s = {bomb_stun:.1f}s stun)!!", flush=True)
+                print(f"!! {me['name']} ate a ground bomb for {landed} damage and was slowed!!", flush=True)
             owner = bb.get("owner")
             if owner and isinstance(owner, str):
                 # defer refund for 5 seconds
                 state.pending_bomb_refunds.append({"owner": owner, "until": now + 5})
-            h.send_json({"ok": True})
+            h.send_json({"ok": True, "slow": 3})
             return
     h.send_json({"ok": False})
     return

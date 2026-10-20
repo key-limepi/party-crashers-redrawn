@@ -110,19 +110,15 @@
       if (!me || !me.evil) return;
       boomedIds.add(bb.id);
       fileSfx(SFX + 'explode.mp3', {});
-      // scale stun by age
-      const bombAge = Math.max(0, Date.now() / 1000 - (bb.at || 0));
-      const bombStun = Math.max(2.0, 5.0 - (bombAge / 15));
-      const explosionScale = bombStun / 4.0; // stun maps to scale
-      game.addBoom(bb.x, bb.y - 20, explosionScale);
-      me.stunT = Math.max(me.stunT || 0, 5); // long stun
-      me.rooted = true;
+      game.addBoom(bb.x, bb.y - 20);
       if (net.id) {
         const pdx = Math.sign((me.pos.x + me.w / 2) - bb.x) || 1;
         fetch('/api/bomb', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id: net.id, action: 'trip', bomb: bb.id, dx: pdx }),
+        }).then((response) => response.json()).then((result) => {
+          if (result.ok) me.bombSlowUntil = Date.now() + (result.slow || 0) * 1000;
         }).catch(() => {});
       }
     };

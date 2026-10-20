@@ -534,7 +534,7 @@ class PlatformerEngine {
         if (Math.abs(cx - sp.x) < 30 && feet > sp.y - 24 && feet < sp.y + 10) {
           sp.tripped = true;
           this.hurtPlayer(25);
-          p.stunT = Math.max(p.stunT || 0, 3);
+          p.stunT = Math.max(p.stunT || 0, 3 * (this.stunScale || 1));
           if (this.onSpikeTrip) this.onSpikeTrip(sp);
           break;
         }
