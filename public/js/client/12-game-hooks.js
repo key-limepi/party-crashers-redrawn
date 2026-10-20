@@ -94,7 +94,7 @@
     };
     game.onSpikeTrip = (sp) => {
       trippedIds.add(sp.id); // one trip
-      fileSfx(SFX + 'basic_hit.wav', {}); // trap sound
+      fileSfx(SFX + 'basic_hit.wav', { v: 0.35 }); // trap sound
       if (net.id) {
         fetch('/api/spike', {
           method: 'POST',

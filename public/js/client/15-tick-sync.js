@@ -164,7 +164,7 @@
       // shield blocked sting once
       if (!justRevived && you && (you.shield_hit || 0) > (p._lastShieldHit || 0) && p.alive !== false) {
         p._lastShieldHit = you.shield_hit;
-        fileSfx(SFX + 'basic_hit.wav', {}); // blue hp sting
+        fileSfx(SFX + 'basic_hit.wav', { v: 0.25 }); // blue hp sting
       }
       // take heals, server first
       if (!justRevived && you && data.round === prevRound && you.hp > p.hp && p.alive !== false) {
@@ -634,7 +634,7 @@
         // shield hit sting killer
         if (p.evil && (d.shield_hit || 0) > (r._lastShieldHit || 0) && !r.evil && data.phase === 'round') {
           r._lastShieldHit = d.shield_hit;
-          fileSfx(SFX + 'basic_hit.wav', {});
+          fileSfx(SFX + 'basic_hit.wav', { v: 0.3 });
         }
         if (r._wasAlive && !r.alive && data.phase === 'round') {
           fileSfx(SFX + 'death.mp3', {}); // they died
@@ -916,7 +916,7 @@
       if (you && (you.stun || 0) > (p.stunT || 0)) p.stunT = you.stun;
       // stun sting
       if (p.evil && (p.stunT || 0) > (p._lastStun || 0)) {
-        fileSfx(SFX + 'basic_hit.wav', {});
+        fileSfx(SFX + 'basic_hit.wav', { v: 0.3 });
         hurtVignette('black');
       }
       p._lastStun = p.stunT || 0;
@@ -929,7 +929,7 @@
       if (you && you.countered && !p.evil) {
         S.countered = true; // shorter wait
         p.cowerT = 0; p.cowering = false;
-        fileSfx(SFX + 'basic_hit.wav', {}); // got em
+        fileSfx(SFX + 'basic_hit.wav', { v: 0.3 }); // got em
       }
       // shove killers
       if (p.evil && you && you.kb && you.kb.at !== p._lastKb) {

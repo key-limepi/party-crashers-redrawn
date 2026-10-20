@@ -326,7 +326,7 @@
               body: JSON.stringify({ id: net.id, victim: victim.id, dmg: 30, stun: 0, ability: true }),
             }).catch(() => {});
             // bit back
-            fileSfx(SFX + (victim.cowering ? 'basic_hit.wav' : 'm1_hit.wav'), {});
+            fileSfx(SFX + (victim.cowering ? 'basic_hit.wav' : 'm1_hit.wav'), { v: 0.3 });
             hitBurst(victim.pos.x + victim.w / 2, victim.pos.y + victim.h / 2, false, true);
           }
         } else if (ab === 'X' && now >= K.spikeCD) {
@@ -520,7 +520,7 @@
           else {
             // through walls now
             if (!K.pullHit) {
-              fileSfx(SFX + 'basic_hit.wav', {}); if (net.killerPick === 'evil') voiceSfx(vpick(VL_PULL));
+              fileSfx(SFX + 'basic_hit.wav', { v: 0.3 }); if (net.killerPick === 'evil') voiceSfx(vpick(VL_PULL));
               hitBurst(rx, ry, false, true); // rope catch
             } // caught one
             K.pullHit = true;
@@ -769,7 +769,7 @@
               SN.spinTouching = true;
               SN.spinHits++;
               SN.spinHitCD = now + 1000;
-              fileSfx(SFX + 'basic_hit.wav', {});
+              fileSfx(SFX + 'basic_hit.wav', { v: 0.3 });
               // both fly
               const away = (p.pos.x + p.w / 2) >= (ek.pos.x + ek.w / 2) ? 1 : -1;
               p.chargeDir = away; p.facing = away; SN.dir = away;
@@ -866,7 +866,7 @@
             if (touching && !SS.boostTouching && now >= (SS.boostHitCD || 0)) {
               SS.boostTouching = true;
               SS.boostHitCD = now + 1000;
-              fileSfx(SFX + 'basic_hit.wav', {});
+              fileSfx(SFX + 'basic_hit.wav', { v: 0.3 });
               fetch('/api/hit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -949,7 +949,7 @@
               SS.spinTouching = true;
               SS.spinHits++;
               SS.spinHitCD = now + 1000;
-              fileSfx(SFX + 'basic_hit.wav', {});
+              fileSfx(SFX + 'basic_hit.wav', { v: 0.3 });
               const away = (p.pos.x + p.w / 2) >= (ek.pos.x + ek.w / 2) ? 1 : -1;
               p.chargeDir = away; p.facing = away; SS.dir = away;
               p.vel.y = Math.min(p.vel.y || 0, -300);

@@ -62,7 +62,7 @@
         p.rooted = true;
         SS.wasBlocking = true;
         setPose('block', 2500);
-        fileSfx(SFX + 'basic_hit.wav', {});
+        fileSfx(SFX + 'basic_hit.wav', { v: 0.3 });
       } else if (ab === 'C' && now >= SS.spinCD && !SS.spinWindup && !SS.spinning && !SS.boosting && !SS.boostWindup && (p.cowerT || 0) <= 0) {
         // super spindash
         SS.spinWindup = now + 800;
