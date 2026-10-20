@@ -79,7 +79,7 @@ CHARACTERS = [
     {"id": "supersonic", "name": "SUPER SONIC", "dev": True},
     {"id": "nyan", "name": "NYAN CYAT", "dev": True},
     {"id": "mario", "name": "MARIO"},
-    {"id": "bear5", "name": "BEAR5", "killer": True},
+    {"id": "bear5", "name": "BEAR5", "killer": True, "dev": True},
     {"id": "shadowmario", "name": "SHADOW MARIO", "killer": True},
 ]
 

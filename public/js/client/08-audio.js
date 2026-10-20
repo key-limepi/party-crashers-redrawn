@@ -1,5 +1,5 @@
     // music beds
-    const AUDIO_V = 2; // bump with index.html ?v=
+    const AUDIO_V = 3; // bump with index.html ?v=
     const audioSrc = (src) => `${src}?v=${AUDIO_V}`;
     function loopTrack(src, looped = true) {
       const a = new Audio(audioSrc(src));
@@ -88,7 +88,7 @@
       lmsnyan: loopTrack(MUS + 'nyanlms.mp3', false), // nyan anthem
       lmsmario: loopTrack(MUS + 'mariolms.mp3', false), // mario anthem
       hero: loopTrack(MUS + 'supersonichero.mp3'), // super sonic theme
-      chase: loopTrack(MUS + 'elux_chasenew.mp3'),
+      chase: loopTrack(MUS + 'elux_chase_v2.mp3'), // new evil lux chase theme
       bear5chase: loopTrack(MUS + 'bear5chasetheme.mp3'), // bear5 chase theme
       shadowmariochase: loopTrack(MUS + 'shadowmario_chasetheme.mp4'),
       terror: loopTrack(MUS + 'elux_terrorradius_new.mp3'),
@@ -108,10 +108,15 @@
       });
     }
     const soloOrder = ['map', 'wait', 'inter', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'hero', 'chase', 'bear5chase', 'shadowmariochase', 'terror', 'charselect'];
-    window.addEventListener('keydown', (e) => {
-      if (e.repeat || e.key.toLowerCase() !== 'm') return;
-      soloIdx = soloIdx >= soloOrder.length - 1 ? -1 : soloIdx + 1;
-    });
+    // music solo lives in the dev panel now
+    const musBox = document.getElementById('musBox');
+    if (musBox) {
+      for (const name of soloOrder) musBox.add(new Option(name, name));
+      document.getElementById('musSoloBtn').addEventListener('click', () => {
+        if (net.mod) soloIdx = soloOrder.indexOf(musBox.value);
+      });
+      document.getElementById('musAutoBtn').addEventListener('click', () => { soloIdx = -1; });
+    }
     function kickAudio() {
       // audio unlock
       if (audioStarted) return;

@@ -375,8 +375,13 @@
       top: 21%;
       left: 50%;
       transform: translateX(-50%) rotate(-2deg);
-      width: 30%;
-      image-rendering: pixelated;
+      width: 40%;
+      text-align: center;
+      font-size: clamp(14px, 2.6vw, 28px);
+      color: #ffb300;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      text-shadow: 2px 2px 0 #000;
     }
     .cs-row {
       position: absolute;

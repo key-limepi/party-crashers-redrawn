@@ -24,7 +24,7 @@
         <div id="fadeBlack"></div>
         <div id="charSelect" style="display:none">
           <img id="csTitle" src="./Assets/Images/UI/CharacterSelect/charselect.png" alt="CHARACTER SELECT">
-          <img id="csSub" src="./Assets/Images/UI/CharacterSelect/testzone.png" alt="TEST ZONE">
+          <div id="csSub"></div>
           <div id="csCount"></div>
           <div class="cs-slots">
             <div class="cs-pslot" id="csKiller"></div>
@@ -207,6 +207,14 @@
       </div>
     </div>
     <div class="modSec">
+      <h3>music!!</h3>
+      <div class="modRow">
+        <select id="musBox"></select>
+        <button id="musSoloBtn">solo it!!</button>
+        <button id="musAutoBtn">auto!!</button>
+      </div>
+    </div>
+    <div class="modSec">
       <h3>shout!!</h3>
       <div class="modRow">
         <input id="announceBox" maxlength="120" placeholder="announce!!">
@@ -271,7 +279,7 @@
   </script>
   <!-- game scripts, one bundle (slow tunnels drop parallel fetches) -->
   <!-- order lives in backend/routes/bundle.py, bump bundle ?v= when any file changes -->
-  <script src="./js/bundle.js?v=105"></script>
+  <script src="./js/bundle.js?v=107"></script>
 </body>
 
 </html>

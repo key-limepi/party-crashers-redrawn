@@ -17,7 +17,7 @@
     // nyan cyat dev only
     const KILLER_ROSTER = [
       { id: 'evil', name: 'EVIL LUX', nameImg: './Assets/Images/UI/CharacterSelect/eluxname.png' },
-      { id: 'bear5', name: 'BEAR5', nameImg: CS + 'bear5name.jpeg' },
+      { id: 'bear5', name: 'BEAR5', nameImg: CS + 'bear5name.jpeg', dev: true },
       { id: 'shadowmario', name: 'SHADOW MARIO', nameImg: CS + 'shadowmarioname.png' },
     ];
     function visRoster() {
@@ -169,7 +169,7 @@
       // killer only, picked faces only
       const kp = killerId && players[killerId];
       if (kp && kp.killer_char) {
-        const kName = kp.killer_char === 'bear5' ? 'BEAR5' : 'EVIL LUX'; // say who
+        const kName = kp.killer_char === 'bear5' ? 'BEAR5' : kp.killer_char === 'shadowmario' ? 'SHADOW MARIO' : 'EVIL LUX'; // say who
         fillSlot(csSlotEls.killer, 'killer', kp.killer_char, `${kName} - ${kp.name}`);
       } else fillSlot(csSlotEls.killer, 'killer', null);
     }

@@ -39,7 +39,7 @@
     });
     setInterval(() => {
       const ping = net.id && net.ping != null ? `${net.ping}ms` : '--';
-      const solo = soloIdx >= 0 ? ` | mus: ${soloOrder[soloIdx]} (M)` : '';
+      const solo = soloIdx >= 0 ? ` | mus: ${soloOrder[soloIdx]} ` : '';
       statsBox.textContent = `fps: ${game.fps || '--'} | ping: ${ping}${solo}`;
       // tired overlay
       vignette.style.opacity = game.player ? Math.min(1, game.player.fatigue || 0).toFixed(2) : 0;

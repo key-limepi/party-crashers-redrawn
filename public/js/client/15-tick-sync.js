@@ -73,6 +73,7 @@
           clearEvil(p);
           trippedIds.clear();
           if (data.phase === 'select' || data.phase === 'round') net.costume = null; // picks rule now
+          if (data.phase === 'round') setMapMusic(mapDef(data.map).music); // spectators too
           if (data.phase !== 'round' || you?.in_round) {
             if (data.phase === 'round') applyRoundMap(data.map);
             else {
@@ -730,6 +731,8 @@
         takenMap = {};
         for (const c of (data.chars || [])) { takenMap[c.id] = !!c.taken; devChars[c.id] = !!c.dev; }
         renderSelect();
+        const csSub = document.getElementById('csSub');
+        if (csSub) csSub.textContent = mapDef(data.map).name;
         const revealing = data.phase === 'round';
         renderLobby(data.players || {}, data.killer_id);
         // pick timer
@@ -764,7 +767,7 @@
       const isLMS = data.phase === 'round' && survsLeft === 1;
       let lmsChar = null;
       if (isLMS) {
-        if (p.alive !== false && !p.evil) lmsChar = net.pick || null;
+        if (p.alive !== false && !p.evil) lmsChar = net.pick || (you && you.char) || null;
         else {
           const last = game.remotes.find((r) => r.alive && r.hp > 0 && !r.evil);
           lmsChar = (last && last.char) || null;

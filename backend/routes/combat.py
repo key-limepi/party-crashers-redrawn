@@ -49,7 +49,8 @@ def hit(h, data):
             # Mario's fireball follows the map geometry and the client reports
             # the confirmed collision; bound range to the playable map scale.
             fireball_hit = bool(data.get("fireball")) and not atk_evil and atk.get("char") == "mario"
-            evil_pull_hit = (bool(data.get("pull")) and atk_evil and atk.get("pull")
+            evil_pull_hit = (bool(data.get("pull")) and atk_evil
+                             and (atk.get("pull") or atk.get("pullwindup")) # windup flag covers the first tick
                              and atk.get("pulltarget") == data.get("victim"))
             reach = (4500 if fireball_hit else
                      EVIL_PULL_RANGE if evil_pull_hit else
