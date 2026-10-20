@@ -36,7 +36,6 @@
         if (SM.mimic) { SM.mimic = null; SM.mimicTarget = null; setShadowMarioLook(p, null); }
         SM.m1CD = now + 950;
         setPose('smm1', 420);
-        fileSfx(SFX + 'shadowmariosneak.wav', { v: 0.25 }); // M1 sound
         const victim = shadowFrontTarget(p);
         if (victim) {
           shadowHit(victim, 20).then((landed) => {
