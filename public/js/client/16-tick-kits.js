@@ -1,14 +1,176 @@
+    function setShadowMarioLook(p, mimic) {
+      const faceSprites = mimic && charSprites[mimic] ? charSprites[mimic] : null;
+      game.setPlayerSprites(faceSprites || shadowMarioSprites);
+      if (mimic && faceSprites) {
+        p.drawW = mimic === 'mario' ? 46 : 50;
+        p.drawH = mimic === 'nyan' ? NYAN_H : ['sonic', 'supersonic', 'tails', 'mario'].includes(mimic) ? 64 : 70;
+      } else {
+        p.drawW = 46; p.drawH = 64;
+      }
+    }
+
+    function shadowHit(victim, dmg, stun = 0) {
+      return fetch('/api/hit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: net.id, victim: victim.id, dmg, stun, ability: true }),
+      }).then((response) => response.json()).then((result) => !!result.ok).catch(() => false);
+    }
+
+    function shadowVictims() {
+      return game.remotes.filter((r) => !r.evil && r.alive && r.hp > 0);
+    }
+
+    function shadowFrontTarget(p) {
+      const dir = p.facing || 1, px = p.pos.x + p.w / 2, py = p.pos.y + p.h / 2;
+      return shadowVictims().filter((r) => {
+        const dx = r.pos.x + r.w / 2 - px, dy = r.pos.y + r.h / 2 - py;
+        return dx * dir > 0 && Math.hypot(dx, dy) <= 124;
+      }).sort((a, b) => Math.abs(a.pos.x + a.w / 2 - px) - Math.abs(b.pos.x + b.w / 2 - px))[0] || null;
+    }
+
+    function castShadowMario(p, data, now, ab) {
+      if (data.phase !== 'round' || data.grace) return;
+      if (ab === 'Z' && now >= SM.m1CD) {
+        // M1 reveals the disguise.
+        if (SM.mimic) { SM.mimic = null; SM.mimicTarget = null; setShadowMarioLook(p, null); }
+        SM.m1CD = now + 950;
+        setPose('smm1', 420);
+        const victim = shadowFrontTarget(p);
+        if (victim) {
+          shadowHit(victim, 20).then((landed) => {
+            if (landed) fileSfx(SFX + 'm1_hit.wav', {});
+          });
+        }
+      } else if (ab === 'X' && now >= SM.slamCD) {
+        SM.slamCD = now + 15000;
+        SM.slamActive = true; SM.slamStartedAt = now; SM.slamAirborne = true;
+        SM.slamHitIds.clear();
+        p.chargeDir = 0; p.vel.x *= 0.25; p.vel.y = -1800; p.noCutUntil = game.time + 1; p.onGround = false; p.rooted = false;
+        setPose('smslam', 2600);
+      } else if (ab === 'C' && now >= SM.mimicCD) {
+        const victims = shadowVictims();
+        if (!victims.length) {
+          sayStatus('no survivor to mimic!!', 2);
+          fileSfx(SFX + 'denied.wav', {});
+          return;
+        }
+        const chosen = victims[Math.floor(Math.random() * victims.length)];
+        SM.mimic = chosen.char || 'lux';
+        SM.mimicTarget = chosen.id;
+        SM.mimicCD = now + 20000;
+        setShadowMarioLook(p, SM.mimic);
+        SM.mimicUntil = now + 420;
+        setPose('smmimic', 420);
+      } else if (ab === 'V' && now >= SM.diveCD) {
+        SM.diveCD = now + 12000;
+        SM.diving = true; SM.diveHit = false; SM.diveUntil = now + 900;
+        SM.diveRecoveryUntil = 0;
+        SM.divePrevX = p.pos.x + p.w / 2; SM.divePrevY = p.pos.y + p.h / 2;
+        p.facing = p.facing || 1;
+        p.chargeDir = p.facing; p.chargeSpeed = 720; p.rooted = false;
+        p.vel.y = p.onGround ? -500 : Math.max(p.vel.y || 0, 180);
+        setPose('smdive', 900);
+      }
+    }
+
+    function tickShadowMario(t) {
+      const { p, data, now } = t;
+      if (!p.evil || !isShadowMario()) return;
+      if (p.alive === false || data.phase !== 'round') {
+        if (SM.diving) p.chargeDir = 0;
+        SM.slamActive = false; SM.diving = false; p.shadowMimicScale = 1;
+        SM.mimic = null; SM.mimicTarget = null; p.shadowMimicScale = 1; setShadowMarioLook(p, null);
+        return;
+      }
+      if ((p.stunT || 0) > 0) {
+        if (SM.diving) p.chargeDir = 0;
+        SM.slamActive = false; SM.diving = false; p.shadowMimicScale = 1;
+        p.actionImg = null; p.actionT = 0; setPose(null, 0);
+        return;
+      }
+      if (SM.mimic && now < SM.mimicUntil) {
+        p.shadowMimicScale = 2.2;
+        p.actionImg = shadowMarioSprites.mimic[Math.min(3, Math.floor((now - (SM.mimicUntil - 420)) / 105))];
+        p.actionT = 0.15;
+      } else {
+        p.shadowMimicScale = 1;
+      }
+      if (poseName === 'smm1' && now < poseUntil) {
+        p.actionImg = shadowMarioSprites.spin[Math.floor((420 - (poseUntil - now)) / 85) % shadowMarioSprites.spin.length]; p.actionT = 0.15;
+      }
+      if (SM.slamActive) {
+        if (!p.onGround) SM.slamAirborne = true;
+        if (SM.slamAirborne && p.onGround && now - SM.slamStartedAt > 140) {
+          SM.slamActive = false; SM.slamRecoveryUntil = now + 300;
+          p.chargeDir = 0; p.vel.x = 0; p.rooted = true;
+          setPose('smslamland', 300);
+          p.actionImg = shadowMarioSprites.slam[1]; p.actionT = 0.3;
+          const cx = p.pos.x + p.w / 2, cy = p.pos.y + p.h;
+          for (const victim of shadowVictims()) {
+            const dx = victim.pos.x + victim.w / 2 - cx, dy = victim.pos.y + victim.h - cy;
+            if (Math.hypot(dx, dy) <= 120 && !SM.slamHitIds.has(victim.id)) {
+              SM.slamHitIds.add(victim.id);
+              shadowHit(victim, 45, 1);
+            }
+          }
+        } else if (now - SM.slamStartedAt > 2800) {
+          SM.slamActive = false; SM.slamRecoveryUntil = now + 250;
+          p.rooted = true; setPose('smslamland', 250);
+          p.actionImg = shadowMarioSprites.slam[1]; p.actionT = 0.25;
+        } else {
+          const age = now - SM.slamStartedAt;
+          p.actionImg = shadowMarioSprites.slam[Math.min(1, Math.floor(age / 360))]; p.actionT = 0.15;
+        }
+      }
+      if (SM.diving) {
+        p.actionImg = (p.vel.y || 0) < -30 ? shadowMarioSprites.jump : shadowMarioSprites.dive; p.actionT = 0.15;
+        const px = p.pos.x + p.w / 2, py = p.pos.y + p.h / 2;
+        const fromX = SM.divePrevX ?? px, fromY = SM.divePrevY ?? py;
+        const halfW = (p.w + 28) / 2 + 12, halfH = (p.h + 60) / 2 - 4;
+        const victim = shadowVictims().find((r) =>
+          r.pos.x + r.w / 2 >= Math.min(fromX, px) - halfW && r.pos.x + r.w / 2 <= Math.max(fromX, px) + halfW &&
+          r.pos.y + r.h / 2 >= Math.min(fromY, py) - halfH && r.pos.y + r.h / 2 <= Math.max(fromY, py) + halfH);
+        SM.divePrevX = px; SM.divePrevY = py;
+        if (victim && !SM.diveHit) {
+          SM.diveHit = true; SM.diving = false; SM.diveRecoveryUntil = now + 300;
+          p.chargeDir = 0; p.vel.x = 0; p.rooted = true;
+          shadowHit(victim, 30).then((landed) => {
+            if (landed) hitBurst(victim.pos.x + victim.w / 2, victim.pos.y + victim.h / 2, false, true);
+          });
+        } else if (now >= SM.diveUntil) {
+          SM.diving = false; SM.diveRecoveryUntil = now + 250;
+          p.chargeDir = 0; p.rooted = true;
+        }
+      }
+      if (now < SM.slamRecoveryUntil || now < SM.diveRecoveryUntil) p.rooted = true;
+      else if (!SM.slamActive && !SM.diving) p.rooted = false;
+    }
+
     function handleAbilityInput(t) {
       let { p, data, isLMS } = t;
       // evil keys
       const now = Date.now();
       // ropes + rockets lock abilities
+      const shadowBusy = p.evil && isShadowMario() && (SM.slamActive || SM.diving || now < SM.slamRecoveryUntil || now < SM.diveRecoveryUntil);
       const canCast = p.alive !== false && (p.stunT || 0) <= 0 && !selectOpen && !p.rocketing
-        && !(p.evil && now < K.pullUntil); // busy dragging
+        && !(p.evil && now < K.pullUntil) && !shadowBusy; // blocked during active moves
       if (!canCast) while (game.input.consumeAbility()) {} // clear queue
       const m1Muted = now < K.penaltyUntil; // sneak mute
       let ab;
       while (canCast && (ab = game.input.consumeAbility())) {
+        if (p.evil && isShadowMario() && SM.mimic && ab !== 'Z') continue;
+        if (p.evil && isShadowMario() && p.invis && ab !== 'Z') {
+          if (ab === 'C') {
+            p.invis = false;
+            K.penaltyUntil = now + 4250;
+          }
+          continue;
+        }
+        if (p.evil && isShadowMario() && p.invis && ab === 'Z') {
+          p.invis = false;
+          K.penaltyUntil = now + 4250;
+        }
         if (p.evil && isBear5() && ab === 'Z') {
           const victim = game.remotes
             .filter((r) => !r.evil && r.alive && r.hp > 0 &&
@@ -31,9 +193,13 @@
             fetch('/api/hit', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: net.id, victim: victim.id, dmg: 999, stun: 0, kb: 3.5, stack: true, ability: true }),
+              body: JSON.stringify({ id: net.id, victim: victim.id, dmg: 14, stun: 0, kb: 3.5, stack: true, ability: true }),
             }).catch(() => {});
           }
+          continue;
+        }
+        if (p.evil && isShadowMario()) {
+          castShadowMario(p, data, now, ab);
           continue;
         }
         if (!p.evil) {
@@ -173,7 +339,7 @@
           // ghost mode
           p.invis = true;
           K.invisUntil = now + 10000; K.sneakCD = now + 20000;
-          voiceSfx(vpick(VL_SNEAK));
+          if (net.killerPick === 'evil') voiceSfx(vpick(VL_SNEAK));
           sneakLoop.start();
         } else if (ab === 'V' && now >= K.pullCD && !K.pullWindup) {
           // wound up ropes
@@ -204,7 +370,7 @@
           K.windupUntil = now + 3000; // rooted windup
           K.rushCD = now + 18000;
           p.rooted = true;
-          voiceSfx(vpick(VL_RUSH));
+          if (net.killerPick === 'evil') voiceSfx(vpick(VL_RUSH));
           p.actionImg = evilAct.windup; p.actionT = 3.1;
           fileSfx(SFX + 'dash_charge.wav', {});
         } else if (ab === 'N' && isNyan() && now >= NY.rocketCD && data.phase === 'round' && !data.grace) {
@@ -342,7 +508,7 @@
           else {
             // through walls now
             if (!K.pullHit) {
-              fileSfx(SFX + 'basic_hit.wav', {}); voiceSfx(vpick(VL_PULL));
+              fileSfx(SFX + 'basic_hit.wav', {}); if (net.killerPick === 'evil') voiceSfx(vpick(VL_PULL));
               hitBurst(rx, ry, false, true); // rope catch
             } // caught one
             K.pullHit = true;
@@ -368,7 +534,7 @@
         }
       }
       // fast ghost
-      if (p.evil) game.moveSpeed = isBear5() ? 820 : p.invis ? EVIL_SNEAK_SPEED : EVIL_SPEED;
+      if (p.evil) game.moveSpeed = isBear5() ? 820 : isShadowMario() ? (SM.mimic ? (SHADOW_MIMIC_SPEED[SM.mimic] || 240) : SHADOW_MARIO_SPEED) : p.invis ? EVIL_SNEAK_SPEED : EVIL_SPEED;
     }
 
     function tickLux(t) {

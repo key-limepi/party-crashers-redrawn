@@ -31,6 +31,8 @@ async function netTick() {
             lift: TW.flying === true, super: SS.transformed === true, forming: !!SS.formUntil, holding: TW.holding === true, whipuntil: !!TW.whipUntil, kickUntil: !!T.kickUntil, jabUntil: !!T.jabUntil, throwUntil: !!TW.throwUntil,
             stunned: (p.stunT || 0) > 0, pull: Date.now() < K.pullUntil,
             pulltarget: p.evil ? K.pullTarget : null,
+            mimic: p.evil && isShadowMario() ? SM.mimic : null,
+            mimic_target: p.evil && isShadowMario() ? SM.mimicTarget : null,
             cower: (p.cowerT || 0) > 0, windup: !!L.prayUntil || !!K.windupUntil || !!SN.windupUntil || !!SN.spinWindup || !!K.pullWindup, pullwindup: !!K.pullWindup,
             dashing: NY.dashing,
             dtmult: isLux() ? (L.dt || 1) : 1, healmult: isLux() ? (L.heal || 1) : 1,
@@ -69,6 +71,7 @@ async function netTick() {
         syncHitPop(t);
         handleAbilityInput(t);
         tickEvilKit(t);
+        tickShadowMario(t);
         tickLux(t);
         tickSonicPeel(t);
         tickSonicSpin(t);

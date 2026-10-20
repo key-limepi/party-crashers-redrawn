@@ -188,8 +188,31 @@
       cower: bear5Image,
       dash: bear5Image,
     };
+    const SHADOW_MARIO = "./Assets/Images/Characters/Killers/ShadowMario/";
+    const shadowMarioWalk = Array.from({ length: 8 }, (_, i) =>
+      loadImg(SHADOW_MARIO + `shadow_mariowalk/sprite-18-${i + 1}.png`));
+    const shadowMarioSpin = [1, 2, 3, 4].map((n) =>
+      loadImg(SHADOW_MARIO + `shadowmario_spin/sprite-51-${n}.png`));
+    const shadowMarioSlam = [1, 2].map((n) =>
+      loadImg(SHADOW_MARIO + `shadowmario_slam${n}.png`));
+    const shadowMarioMimic = [15, 16, 17, 18].map((n) =>
+      loadImg(SHADOW_MARIO + `shadowmario_mimick/sprite-12-${n}.png`));
+    const shadowMarioSprites = {
+      idle: [loadImg(SHADOW_MARIO + "shadowmario_idle.png")],
+      walk: shadowMarioWalk,
+      run: shadowMarioWalk,
+      jump: loadImg(SHADOW_MARIO + "shadowmario_jump.png"),
+      fall: loadImg(SHADOW_MARIO + "shadowmario_fall.png"),
+      dive: loadImg(SHADOW_MARIO + "shadowmario_dive.png"),
+      spin: shadowMarioSpin,
+      slam: shadowMarioSlam,
+      mimic: shadowMarioMimic,
+      walkStride: 36,
+      runStride: 30,
+    };
     charSprites.evil = evilSprites;
     charSprites.bear5 = bear5Sprites;
+    charSprites.shadowmario = shadowMarioSprites;
     const evilWindup = [loadImg(EVIL + "m1idle.png"), loadImg(EVIL + "m1idle2.png"), loadImg(EVIL + "m1idle3.png")];
     const evilAct = {
       spike: loadImg(EVIL + "spikeplace1.png"),

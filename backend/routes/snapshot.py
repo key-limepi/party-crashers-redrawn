@@ -40,6 +40,7 @@ def players_snapshot(h, url):
             d["shield_hit"] = pl.get("shield_hit_at", 0) # last absorb sting
             d["char"] = pl.get("char")
             d["killer_char"] = pl.get("killer_char")
+            d["mimic_name"] = pl.get("mimic_name")
             d["malice"] = state.malice.get(pl["fid"], 0)
             d["paid"] = pl.get("paid")
             d["pay_msg"] = pl.get("pay_msg", "")

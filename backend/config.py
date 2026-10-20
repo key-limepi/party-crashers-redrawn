@@ -79,7 +79,8 @@ CHARACTERS = [
     {"id": "supersonic", "name": "SUPER SONIC", "dev": True},
     {"id": "nyan", "name": "NYAN CYAT", "dev": True},
     {"id": "mario", "name": "MARIO"},
-    {"id": "bear5", "name": "BEAR5", "dev": True, "killer": True},
+    {"id": "bear5", "name": "BEAR5", "killer": True},
+    {"id": "shadowmario", "name": "SHADOW MARIO", "killer": True},
 ]
 
 # map loot pool, weighted
@@ -99,7 +100,7 @@ STATE_KEYS = ("x", "y", "facing", "moving", "onGround",
               "invis", "m1", "stunned", "pull", "cower", "windup", "pose", "dashing",
               "peeling", "spinning", "spinwindup", "pullwindup", "pulltarget", "lift", "super", "forming", "holding", "whipuntil",
               "dtmult", "healmult", "praying", "rushing", "panting",
-              "anim", "m1v", "trail", "fireball")
+              "anim", "m1v", "trail", "fireball", "mimic")
 
 # lux overheal tuning
 AURA_RADIUS = 260 # conversion reach
@@ -125,6 +126,7 @@ GRADE_CUTS = ((400, "S"), (250, "A"), (120, "B"), (40, "C")) # else d
 WIN_CUTSCENES = {
     "evil": "./Assets/Videos/eluxwinscreen.mp4", # evil lux win
     "bear5": "./Assets/Videos/bear5_killerintro.mp4", # bear5 win
+    "shadowmario": "./Assets/Videos/shadowmario_winscreen.mp4",
 }
 
 LOCAL_SESSION = {"sid": "local", "fid": "local", "name": "guest", "pin": None} # local login stand-in

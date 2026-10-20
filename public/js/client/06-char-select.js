@@ -17,7 +17,8 @@
     // nyan cyat dev only
     const KILLER_ROSTER = [
       { id: 'evil', name: 'EVIL LUX', nameImg: './Assets/Images/UI/CharacterSelect/eluxname.png' },
-      { id: 'bear5', name: 'BEAR5', nameImg: CS + 'bear5name.jpeg', dev: true },
+      { id: 'bear5', name: 'BEAR5', nameImg: CS + 'bear5name.jpeg' },
+      { id: 'shadowmario', name: 'SHADOW MARIO', nameImg: CS + 'shadowmarioname.png' },
     ];
     function visRoster() {
       const list = ROSTER.filter((c) => (net.mod || !devChars[c.id]));
@@ -117,7 +118,15 @@
       return true;
     }
     function runFrameFor(charId, evil) {
-      if (evil) return charId === 'bear5' ? bear5Image.src : EVIL_RUN[csFrame % EVIL_RUN.length];
+      if (evil) {
+        if (charId === 'bear5') return bear5Image.src;
+        if (charId === 'shadowmario') {
+          const frame = shadowMarioSprites.run[csFrame % shadowMarioSprites.run.length];
+          if (frame && frame.complete && frame.naturalWidth) return frame.src;
+          return shadowMarioSprites.idle[0].src;
+        }
+        return EVIL_RUN[csFrame % EVIL_RUN.length];
+      }
       if (charId === 'supersonic') charId = 'sonic'; // disguised in select
       const set = charSprites[charId];
       let run = set && set.run && set.run[csFrame % set.run.length];

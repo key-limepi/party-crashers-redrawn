@@ -6,7 +6,7 @@ import math
 
 from .. import state
 from ..admins import is_admin
-from ..config import DIGIPOGS_ON, FORMBAR_MODE, OVERHEAL_BONUS, OVERHEAL_CD, OVERHEAL_RADIUS, STATE_KEYS
+from ..config import CHARACTERS, DIGIPOGS_ON, FORMBAR_MODE, OVERHEAL_BONUS, OVERHEAL_CD, OVERHEAL_RADIUS, STATE_KEYS
 from ..game import note_death
 
 
@@ -80,6 +80,23 @@ def state_post(h, data):
             for key in STATE_KEYS:
                 if key in data:
                     pl[key] = data[key]
+            if "mimic" in data:
+                candidate = data.get("mimic")
+                survivor_chars = {c["id"] for c in CHARACTERS if not c.get("killer")}
+                pl["mimic"] = (candidate if pl.get("killer_char") == "shadowmario"
+                               and isinstance(candidate, str) and candidate in survivor_chars else None)
+            if "mimic_target" in data:
+                target_id = data.get("mimic_target")
+                target = state.players.get(target_id) if isinstance(target_id, str) else None
+                survivor_chars = {c["id"] for c in CHARACTERS if not c.get("killer")}
+                if (pl.get("killer_char") == "shadowmario" and pl.get("mimic")
+                        and target and target_id != data.get("id") and target.get("alive", True)
+                        and target.get("char") in survivor_chars):
+                    pl["mimic_target"] = target_id
+                    pl["mimic_name"] = target.get("name")
+                else:
+                    pl["mimic_target"] = None
+                    pl["mimic_name"] = None
             if "fireball" in data:
                 fb = data.get("fireball")
                 if isinstance(fb, dict) and pl.get("char") == "mario" and state.phase == "round":

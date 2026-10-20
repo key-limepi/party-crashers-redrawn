@@ -3,7 +3,11 @@
     // wound ticking ropes
     const PULL_RANGE = 350;
     const EVIL_HP = 220;
+    const SHADOW_MARIO_HP = 300;
+    const SHADOW_MARIO_DRAW_W = 46, SHADOW_MARIO_DRAW_H = 64;
     const EVIL_SPEED = 300;
+    const SHADOW_MARIO_SPEED = EVIL_SPEED * 1.5;
+    const SHADOW_MIMIC_SPEED = { sonic: 270, supersonic: 270, nyan: 300 };
     const EVIL_SNEAK_SPEED = 430;
     // lms buffs
     const LMS_HP = 150; // more health
@@ -138,6 +142,12 @@
       if (p.evil) {
         if (net.killerPick === 'bear5') {
           abilDefs = [{ key: 'Z', name: 'M1', icon: ABIL_ICONS.bear5m1, cd: () => 0 }];
+        } else if (net.killerPick === 'shadowmario') {
+          abilDefs = [
+            { key: 'X', name: 'SLAM', icon: ABIL_ICONS.blank, cd: () => SM.slamCD },
+            { key: 'C', name: 'MIMIC', icon: ABIL_ICONS.blank, cd: () => SM.mimicCD },
+            { key: 'V', name: 'DIVE', icon: ABIL_ICONS.blank, cd: () => SM.diveCD },
+          ];
         } else {
           abilDefs = [
             { key: 'X', name: 'SPIKES', icon: ABIL_ICONS.spikes, cd: () => K.spikeCD },
@@ -215,12 +225,15 @@
       p.evil = evil;
       if (evil) {
         const bear = net.killerPick === 'bear5';
-        p.char = bear ? 'bear5' : 'evil';
-        game.setPlayerSprites(bear ? bear5Sprites : evilSprites);
-        p.drawW = bear ? 76 : 50; p.drawH = bear ? 94 : 70; // full size
-        p.maxHp = bear ? 999 : EVIL_HP; p.hp = bear ? 999 : EVIL_HP;
+        const shadowMario = net.killerPick === 'shadowmario';
+        p.char = bear ? 'bear5' : shadowMario ? 'shadowmario' : 'evil';
+        game.setPlayerSprites(bear ? bear5Sprites : shadowMario ? shadowMarioSprites : evilSprites);
+        p.drawW = bear ? 76 : shadowMario ? SHADOW_MARIO_DRAW_W : 50;
+        p.drawH = bear ? 94 : shadowMario ? SHADOW_MARIO_DRAW_H : 70;
+        p.maxHp = bear ? 999 : shadowMario ? SHADOW_MARIO_HP : EVIL_HP;
+        p.hp = p.maxHp;
         p.maxJumps = 2;
-        game.moveSpeed = bear ? 820 : EVIL_SPEED; // evil speed
+        game.moveSpeed = bear ? 820 : shadowMario ? SHADOW_MARIO_SPEED : EVIL_SPEED; // killer speed
         // bear5 fast no fly
         game.fly = false;
         game.noclip = false;
@@ -245,7 +258,7 @@
       const now = Date.now();
       const p = game.player;
       if (!p || !net.id) return;
-      const role = p.evil ? (net.killerPick === 'bear5' ? 'bear5' : 'evil') : (isNyan() ? 'nyan' : isToko() ? 'toko' : (isSonic() ? 'sonic' : (isSuper() ? (SS.transformed ? 'super' : 'super0') : (isTails() ? 'tails' : (isMario() ? 'mario' : 'lux')))));
+      const role = p.evil ? (net.killerPick === 'bear5' ? 'bear5' : net.killerPick === 'shadowmario' ? 'shadowmario' : 'evil') : (isNyan() ? 'nyan' : isToko() ? 'toko' : (isSonic() ? 'sonic' : (isSuper() ? (SS.transformed ? 'super' : 'super0') : (isTails() ? 'tails' : (isMario() ? 'mario' : 'lux')))));
       if (role !== abilRole) {
         abilRole = role;
         buildAbilities();

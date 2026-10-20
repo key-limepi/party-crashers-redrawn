@@ -55,3 +55,11 @@ move: B | RUSH | slam charge
 desc: Run.
 move: Z | M1 | one-tap folding swing
 passive: Super speed.
+
+[shadowmario]
+desc: A shadowy Mario who can disguise himself and ambush survivors.
+move: Z | M1 | swing for 20 damage
+move: X | SLAM | jump and slam for 45 damage and 1s stun
+move: C | MIMIC | disguise as a survivor until using M1
+move: V | DIVE | dive forward for 30 damage
+move: B | SPIN | spin jump to deal 20 damage

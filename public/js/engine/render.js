@@ -194,8 +194,9 @@ Object.assign(PlatformerEngine.prototype, {
         // cower shake
         const scare = (b.cowering || b.tremble) ? Math.floor(Math.random() * 3) - 1 : 0;
         const fs = this.frameSize(b, img);
-        const scaleX = b.char === 'bear5' ? (b.bearDrawScaleX || 1) : 1;
-        const scaleY = b.char === 'bear5' ? (b.bearDrawScaleY || 1) : 1;
+        const mimicScale = b.shadowMimicScale || 1;
+        const scaleX = (b.char === 'bear5' ? (b.bearDrawScaleX || 1) : 1) * mimicScale;
+        const scaleY = (b.char === 'bear5' ? (b.bearDrawScaleY || 1) : 1) * mimicScale;
         const dw = Math.max(1, Math.round(fs.dw * scaleX));
         const dh = Math.max(1, Math.round(fs.dh * scaleY));
         // use visual center
@@ -341,7 +342,8 @@ Object.assign(PlatformerEngine.prototype, {
         }
         // evil name
         // afk tag
-        const evilTag = b.isRemote && b.evil;
+        const disguisedKiller = b.isRemote && b.evil && b.char === 'shadowmario' && !!b.mimic;
+        const evilTag = b.isRemote && b.evil && !disguisedKiller;
         const afkTag = b.isRemote && b.away;
         ctx.fillStyle = evilTag ? '#ff4757' : '#fff';
         ctx.font = `${evilTag ? 'bold 13px' : '11px'} "Comic Sans MS", "Comic Sans", cursive`;
@@ -350,7 +352,7 @@ Object.assign(PlatformerEngine.prototype, {
         ctx.lineWidth = 3;
         ctx.strokeStyle = '#1a1b26';
         const label = evilTag ? `EVIL ${String(b.name || 'friend')}` :
-          b.isRemote ? String(b.name || 'friend') : `${Math.ceil((b.hp ?? 0) + Math.max(0, b.shield || 0))}`;
+          b.isRemote ? String(disguisedKiller ? (b.mimicName || b.name || 'friend') : (b.name || 'friend')) : `${Math.ceil((b.hp ?? 0) + Math.max(0, b.shield || 0))}`;
         const labelText = afkTag ? `${label} [AFK]` : label;
         ctx.strokeText(labelText, bx + bw / 2, by - 4);
         ctx.fillText(labelText, bx + bw / 2, by - 4);

@@ -11,6 +11,8 @@
 - patch uses the lux_healpatch sound; lux's prayer, run, and quieter panting sounds are also in
 - survivors see a red vignette when hit, and the killer sees a black vignette when stunned
 - green hill's sunset tint is stronger and more orange
+- bear5 is public now, and his m1 deals 15 damage
+- shadow mario is a 300 hp dev killer with m1, slam, mimic, dive, and spin; he uses his own name art and no evil lux voice lines
 
 ## v0.94
 - keybinds!! open settings, theres a new "keys" section at the bottom

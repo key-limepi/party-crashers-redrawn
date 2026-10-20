@@ -44,6 +44,7 @@
     const introWrap = document.getElementById('introWrap');
     const introVid = document.getElementById('introVid');
     const bearVid = document.getElementById('bearVid');
+    const shadowMarioVid = document.getElementById('shadowMarioVid');
     if (introVid) {
       const introDone = () => {
         if (net.id) {
@@ -62,10 +63,15 @@
         introWrap.style.display = 'none';
         introDone();
       });
+      if (shadowMarioVid) shadowMarioVid.addEventListener('ended', () => {
+        introWrap.style.display = 'none';
+        introDone();
+      });
       introWrap.addEventListener('click', () => {
         introWrap.style.display = 'none';
         try { introVid.pause(); } catch (_) { /* hush!! */ }
         try { bearVid.pause(); } catch (_) { /* hush!! */ }
+        try { shadowMarioVid.pause(); } catch (_) { /* hush!! */ }
         introDone();
       });
     }
@@ -84,6 +90,7 @@
       hero: loopTrack(MUS + 'supersonichero.mp3'), // super sonic theme
       chase: loopTrack(MUS + 'elux_chasenew.mp3'),
       bear5chase: loopTrack(MUS + 'bear5chasetheme.mp3'), // bear5 chase theme
+      shadowmariochase: loopTrack(MUS + 'shadowmario_chasetheme.mp4'),
       terror: loopTrack(MUS + 'elux_terrorradius_new.mp3'),
       charselect: loopTrack(MUS + 'charselect.mp3'),
     };
@@ -100,7 +107,7 @@
         if (lmsTrack === key) lmsEnded = true;
       });
     }
-    const soloOrder = ['map', 'wait', 'inter', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'hero', 'chase', 'bear5chase', 'terror', 'charselect'];
+    const soloOrder = ['map', 'wait', 'inter', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'hero', 'chase', 'bear5chase', 'shadowmariochase', 'terror', 'charselect'];
     window.addEventListener('keydown', (e) => {
       if (e.repeat || e.key.toLowerCase() !== 'm') return;
       soloIdx = soloIdx >= soloOrder.length - 1 ? -1 : soloIdx + 1;

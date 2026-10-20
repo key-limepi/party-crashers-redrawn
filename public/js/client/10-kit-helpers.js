@@ -22,6 +22,13 @@
     function poseImage(isEvil, char, pose, variant) {
       if (isEvil) {
         if (char === 'bear5') return bear5Image;
+        if (char === 'shadowmario') {
+          if (pose === 'smmimic') return shadowMarioSprites.mimic[0];
+          if (pose === 'smm1') return shadowMarioSprites.spin[0];
+          if (pose === 'smslam') return shadowMarioSprites.slam[0];
+          if (pose === 'smslamland') return shadowMarioSprites.slam[1];
+          if (pose === 'smdive') return shadowMarioSprites.dive;
+        }
         if (pose === 'swing') return evilM1[(variant | 0) % evilM1.length];
         if (pose === 'spike') return evilAct.spike;
       } else if (char === 'toko') {
@@ -70,6 +77,11 @@
       if (MU.fireballProjectile) game.marioFireballs = (game.marioFireballs || []).filter((f) => f !== MU.fireballProjectile);
       MU.fireballProjectile = null; MU.fireballPending = false;
       MU.spinCD = 0; MU.spinUntil = 0; MU.spinHit = false; MU.spinUsed = false;
+      SM.mimic = null; SM.mimicTarget = null; SM.mimicUntil = 0;
+      SM.m1CD = 0; SM.slamCD = 0; SM.slamActive = false; SM.slamStartedAt = 0; SM.slamAirborne = false;
+      SM.slamHitIds.clear(); SM.slamRecoveryUntil = 0;
+      SM.mimicCD = 0; SM.diveCD = 0; SM.diving = false; SM.diveUntil = 0; SM.diveHit = false; SM.divePrevX = null; SM.divePrevY = null;
+      SM.diveRecoveryUntil = 0;
       SN.windupUntil = 0; SN.peelUntil = 0; SN.peeling = false;
       SN.spinWindup = 0; SN.spinUntil = 0; SN.spinning = false;
       SN.peelCD = 0; SN.spinCD = 0; SN.spinHits = 0; SN.spinTouching = false;
@@ -118,6 +130,13 @@
       fireballCD: 0, fireballUntil: 0, fireballLaunchAt: 0,
       fireballProjectile: null, fireballPending: false,
       spinCD: 0, spinUntil: 0, spinHit: false, spinUsed: false,
+    };
+    const SM = {
+      mimic: null, mimicTarget: null, mimicUntil: 0,
+      m1CD: 0, slamCD: 0, slamActive: false, slamStartedAt: 0, slamAirborne: false,
+      slamHitIds: new Set(), slamRecoveryUntil: 0,
+      mimicCD: 0, diveCD: 0, diving: false, diveUntil: 0, diveHit: false, divePrevX: null, divePrevY: null,
+      diveRecoveryUntil: 0,
     };
     game.onUpdate = () => {
       const player = game.player;
@@ -179,6 +198,7 @@
     const isSuper = () => effChar() === 'supersonic';
     const isTails = () => effChar() === 'tails';
     const isMario = () => effChar() === 'mario';
+    const isShadowMario = () => !!(game.player && game.player.evil && net.killerPick === 'shadowmario');
     const isLux = () => !isToko() && !isSonic() && !isSuper() && !isTails() && !isNyan() && !isMario();
     const isBear5 = () => !!(game.player && game.player.evil && (net.killerPick === 'bear5' || (game.player.char || '') === 'bear5'));
     // costume counts
