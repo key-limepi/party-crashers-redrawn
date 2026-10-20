@@ -31,7 +31,7 @@
             fetch('/api/hit', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: net.id, victim: victim.id, dmg: 999, stun: 0, kb: 3.5, stack: true }),
+              body: JSON.stringify({ id: net.id, victim: victim.id, dmg: 999, stun: 0, kb: 3.5, stack: true, ability: true }),
             }).catch(() => {});
           }
           continue;
@@ -145,7 +145,7 @@
             fetch('/api/hit', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: net.id, victim: victim.id, dmg: 30, stun: 0 }),
+              body: JSON.stringify({ id: net.id, victim: victim.id, dmg: 30, stun: 0, ability: true }),
             }).catch(() => {});
             // bit back
             fileSfx(SFX + (victim.cowering ? 'basic_hit.wav' : 'm1_hit.wav'), {});
@@ -307,7 +307,7 @@
               fetch('/api/hit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: net.id, victim: r.id, dmg: 50, stun: 0 }),
+                body: JSON.stringify({ id: net.id, victim: r.id, dmg: 50, stun: 0, ability: true }),
               }).catch(() => {});
               fileSfx(SFX + 'm1_hit.wav', { rate: 0.7 }); // slam sound
               hitBurst(r.pos.x + r.w / 2, r.pos.y + r.h / 2, true, true); // slam chunks
@@ -355,7 +355,7 @@
               fetch('/api/hit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: net.id, victim: r.id, dmg: tickDmg, stun: 0, pull: true }),
+                body: JSON.stringify({ id: net.id, victim: r.id, dmg: tickDmg, stun: 0, pull: true, ability: true }),
               }).then((response) => response.json()).then((result) => {
                 if (K.pullSequence === seq && result.ok) K.pullDamage += Math.max(0, Number(result.landed) || 0);
               }).catch(() => {}).finally(() => {

@@ -52,7 +52,7 @@ def hit(h, data):
                              and atk.get("pulltarget") == data.get("victim"))
             reach = (4500 if fireball_hit else
                      EVIL_PULL_RANGE if evil_pull_hit else
-                     140 if stun <= 0 else 95)
+                     180 if stun <= 0 else 130)
             dx = vic.get("x", 0) - k.get("x", 0)
             dy = vic.get("y", 0) - k.get("y", 0)
             if dx * dx + dy * dy < reach * reach:
@@ -70,7 +70,7 @@ def hit(h, data):
                     print(f"!! {vic['name']} COUNTERED {k['name']}!!", flush=True)
                     h.send_json({"ok": True})
                     return
-                if stun > 0 or now - state.last_hit.get(data["victim"], 0) >= TOUCH_COOLDOWN:
+                if stun > 0 or data.get("ability") or now - state.last_hit.get(data["victim"], 0) >= TOUCH_COOLDOWN:
                     state.last_hit[data["victim"]] = now
                     # shield eats hits first
                     rem = dmg

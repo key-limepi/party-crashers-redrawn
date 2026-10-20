@@ -3,48 +3,48 @@
 # lines starting with # are ignored, keep moves short
 
 [lux]
-desc: placeholder
-move: Z | PRAY | kneel, gain a random prayer
+desc: Bestowed healing magic under the Crystal.
+move: Z | PRAY | floats upward to get a random status effect
 move: X | ADRENALINE | 6s sprint, then pant
 move: C | PATCH | +25 shield to Lux, shares +50 among nearby allies
-passive: converting near hurt allies slows you
+passive: healing near hurt allies slows you
 
 [toko]
-desc: placeholder
+desc: The fearless fighter, blisfully unaware.
 move: Z | ROUNDHOUSE | leaping kick, bounce off evil
-move: X | JAB | quick stun poke
+move: X | JAB | quick punch to stun
 
 [sonic]
-desc: placeholder
-move: Z | PEELOUT | rev up, 6s zoom, pals ride
-move: X | SPINDASH | rolling stun, 3 hits
-passive: 270 run speed
+desc: The fastest thing alive...
+move: Z | PEELOUT | revs up and blasts off with blazing speed
+move: X | SPINDASH | curls into a ball to hit the killer
+passive: faster than other survivors
 
 [supersonic]
-desc: placeholder
-move: Z | TRANSFORM | 550 hp rainbow form
-move: Z | BOOST | 4s ram
-move: X | BLOCK | stun guard
-move: C | SPINDASH | flying roll
+desc: The perfect lifeform.
+move: Z (Base Only) | TRANSFORM | Transform into super sonic.
+move: Z | BOOST | Blast off instantly and ram into evil
+move: X | BLOCK | Parry moves from killer
+move: C | SPINDASH | It flies now.
 
 [tails]
-desc: placeholder
-move: Z | FLY | meter-based flight
-move: X | BOMB | hold then toss, 5 stash
+desc: The two-tailed fox.
+move: Z | FLY | Boost upward and carry others
+move: X | BOMB | throws bombs that can land on the floor or into the killer
 move: C | WHIP | tail stun
 
 [nyan]
-desc: placeholder
+desc: Nya! Nya!
 move: Z | ROCKET | homing cat missile
-move: X | RAINBOW DASH | 700ms dash
+move: X | RAINBOW DASH | blast off
 
 [mario]
-desc: The fearless plumber brings a fireball to keep the killer at bay.
-move: Z | FIREBALL | throw a fireball that stuns the killer on hit; 15s hit cooldown, 25s miss cooldown
-move: X | SPIN | extra jump that stuns on contact; 15s hit cooldown, 25s miss cooldown
+desc: Mr. Videogame himself!
+move: Z | FIREBALL | throw a fireball that stuns the killer on hit
+move: X | SPIN | extra jump that stuns on contact; 15s hit cooldown
 
 [evil]
-desc: placeholder
+desc: Here to finish the job.
 move: Z | M1 | slow heavy swing
 move: X | SPIKES | ground traps
 move: C | SNEAK | 10s ghost
@@ -52,6 +52,6 @@ move: V | PULL | drag them in
 move: B | RUSH | slam charge
 
 [bear5]
-desc: placeholder
+desc: Run.
 move: Z | M1 | one-tap folding swing
-passive: no fly, just fast
+passive: Super speed.

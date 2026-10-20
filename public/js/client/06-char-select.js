@@ -28,6 +28,20 @@
     }
     // preview blurbs, true to kit
     let CHAR_INFO = {};
+    const csPrevInfo = document.getElementById('csPrevInfo');
+    function fitPreviewInfo() {
+      if (!csPrevInfo) return;
+      const baseSize = parseFloat(getComputedStyle(csPrevInfo).fontSize) || 13;
+      for (const line of csPrevInfo.children) {
+        let size = baseSize;
+        line.style.fontSize = `${size}px`;
+        while (line.scrollWidth > line.clientWidth + 1 && size > 7) {
+          size = Math.max(7, size - 0.5);
+          line.style.fontSize = `${size}px`;
+        }
+      }
+    }
+    window.addEventListener('resize', fitPreviewInfo);
     fetch('./chars.txt').then((r) => r.text()).then((txt) => {
       // section per id, # comments
       let cur = null;
@@ -46,6 +60,7 @@
           if (parts.length >= 3) CHAR_INFO[cur].moves.push([parts[0], parts[1], parts.slice(2).join('|')]);
         }
       }
+      if (csPrevInfo) csPrevInfo.dataset.char = '';
       if (selectOpen) renderSelect(); // fill preview now
     }).catch(() => {}); // no cards, game goes on
     let revealUntil = 0; // reveal timer
@@ -171,7 +186,7 @@
       }
       // preview card
       const info = CHAR_INFO[cur.id];
-      const prevInfo = document.getElementById('csPrevInfo');
+      const prevInfo = csPrevInfo;
       if (prevInfo && prevInfo.dataset.char !== cur.id) {
         prevInfo.dataset.char = cur.id;
         const lines = info ? [`${info.desc}`] : [];
@@ -183,6 +198,7 @@
           div.textContent = ln;
           prevInfo.appendChild(div);
         }
+        fitPreviewInfo();
       }
       const evilLocked = !!(game.player && game.player.evil) || net.phase === 'round';
       document.getElementById('csLeft').style.display = evilLocked ? 'none' : '';
