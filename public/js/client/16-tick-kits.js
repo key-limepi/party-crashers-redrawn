@@ -38,7 +38,7 @@
         setPose('smm1', 420);
         const victim = shadowFrontTarget(p);
         if (victim) {
-          shadowHit(victim, 20).then((landed) => {
+          shadowHit(victim, 12).then((landed) => {
             if (landed) fileSfx(SFX + 'm1_hit.wav', { v: 0.3 });
           });
         }
