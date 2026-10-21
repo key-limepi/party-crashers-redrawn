@@ -38,6 +38,85 @@ def spike(h, data):
     return
 
 
+<<<<<<< Updated upstream
+=======
+def icewall(h, data):
+    """POST /api/icewall"""
+    # noelle places or damages icewall
+    with state.lock:
+        me = state.players.get(data.get("id"))
+        action = data.get("action")
+        if action == "place" and me and state.phase == "round" and me.get("char") == "noelle" and not me.get("evil"):
+            try:
+                x, y = float(data.get("x", 0)), float(data.get("y", 0))
+            except (ValueError, TypeError):
+                h.send_json({"ok": False, "reason": "bad spot"})
+                return
+            # too close to another wall
+            for w in state.icewalls.values():
+                if not w.get("destroyed") and (x - w["x"]) ** 2 + (y - w["y"]) ** 2 < 140 ** 2:
+                    h.send_json({"ok": False, "reason": "too close!!"})
+                    return
+            # only one active wall per player
+            for w in state.icewalls.values():
+                if not w.get("destroyed") and w.get("owner") == pid:
+                    h.send_json({"ok": False, "reason": "already active!!"})
+                    return
+            state.icewall_seq += 1
+            iid = f"i{state.icewall_seq}"
+            pid = data.get("id")
+            state.icewalls[iid] = {
+                "x": x, "y": y, "w": 60, "h": 110,
+                "hp": 60, "at": time.time(),
+                "owner": pid, "destroyed": False, "destroyed_by": None,
+            }
+            h.send_json({"ok": True, "icewall": dict(state.icewalls[iid], id=iid)})
+            return
+        if action == "hit" and data.get("icewall") in state.icewalls:
+            iw = state.icewalls[data["icewall"]]
+            if iw.get("destroyed"):
+                h.send_json({"ok": False, "reason": "gone"})
+                return
+            # only killer can damage
+            if data.get("id") != state.killer_id:
+                h.send_json({"ok": False, "reason": "nope"})
+                return
+            iw["hp"] = max(0, iw["hp"] - 10)
+            if iw["hp"] <= 0:
+                iw["destroyed"] = True
+                iw["destroyed_by"] = data.get("id")
+                iw["destroyed_at"] = time.time()
+                # passive: speed burst for noelle owner
+                owner = state.players.get(iw["owner"])
+                if owner and owner.get("char") == "noelle" and not owner.get("evil"):
+                    owner["speed_burst"] = time.time() + 3.0
+                print(f"!! icewall destroyed by {state.players.get(data.get('id'), {}).get('name', '??')}")
+            h.send_json({"ok": True, "hp": iw["hp"], "destroyed": iw["destroyed"]})
+            return
+        if action == "mist" and me and state.phase == "round" and me.get("char") == "noelle" and not me.get("evil"):
+            now = time.time()
+            px = me.get("x", 0) + me.get("w", 50) / 2
+            py = me.get("y", 0) + me.get("h", 70) / 2
+            state.noelle_mists.append({"owner": data.get("id"), "at": now})
+            kid = state.players.get(state.killer_id)
+            if kid and kid.get("alive", True) and kid.get("hp", 100) > 0:
+                kx = kid.get("x", 0) + kid.get("w", 50) / 2
+                ky = kid.get("y", 0) + kid.get("h", 70) / 2
+                if math.hypot(kx - px, ky - py) < 200:
+                    state.noelle_slows[state.killer_id] = {
+                        "until": now + 3.0,
+                        "fade_until": now + 4.0,
+                        "active": True,
+                    }
+                    h.send_json({"ok": True, "slowed": True})
+                    return
+            h.send_json({"ok": True, "slowed": False})
+            return
+    h.send_json({"ok": False})
+    return
+
+
+>>>>>>> Stashed changes
 def bomb(h, data):
     """POST /api/bomb"""
     # tails traps, airborne throws

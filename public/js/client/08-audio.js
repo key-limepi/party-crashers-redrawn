@@ -87,6 +87,7 @@
       lmstails: loopTrack(MUS + 'tails_lms.mp3', false), // tails anthem
       lmsnyan: loopTrack(MUS + 'nyanlms.mp3', false), // nyan anthem
       lmsmario: loopTrack(MUS + 'mariolms.mp3', false), // mario anthem
+      lmsnoelle: loopTrack(MUS + 'noelle_lms.mp3', false), // noelle anthem
       hero: loopTrack(MUS + 'supersonichero.mp3'), // super sonic theme
       chase: loopTrack(MUS + 'elux_chase_v2.mp3'), // new evil lux chase theme
       bear5chase: loopTrack(MUS + 'bear5chasetheme.mp3'), // bear5 chase theme
@@ -102,12 +103,12 @@
     // lms rules
     let lmsTrack = null; // track ids
     let lmsEnded = false;
-    for (const key of ['lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario']) {
+    for (const key of ['lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'lmsnoelle']) {
       beds[key].addEventListener('ended', () => {
         if (lmsTrack === key) lmsEnded = true;
       });
     }
-    const soloOrder = ['map', 'wait', 'inter', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'hero', 'chase', 'bear5chase', 'shadowmariochase', 'terror', 'charselect'];
+    const soloOrder = ['map', 'wait', 'inter', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'lmsnoelle', 'hero', 'chase', 'bear5chase', 'shadowmariochase', 'terror', 'charselect'];
     // music solo lives in the dev panel now
     const musBox = document.getElementById('musBox');
     if (musBox) {

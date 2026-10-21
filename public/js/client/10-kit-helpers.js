@@ -42,6 +42,11 @@
       } else if (char === 'mario') {
         if (pose === 'fireball') return marioSprites.fireballThrow[0];
         if (pose === 'spin') return marioSprites.spin[0];
+      } else if (char === 'noelle') {
+        if (pose === 'icewall' || pose === 'sleepmist') {
+          const frames = noelleSprites.icewall || [];
+          return frames.length ? frames[0] : null;
+        }
       } else {
         if (pose === 'dash') return luxDash;
       }
@@ -99,6 +104,10 @@
       p.sneakColor = null;
       TW.bombCD = 0; TW.flyCD = 0; TW.whipCD = 0; TW.throwUntil = 0; TW.bombsLeft = 5; flyLoop.stop();
       NY.rocketCD = 0; NY.dashCD = 0; NY.dashUntil = 0; NY.dashing = false; NY.dashHit = false;
+<<<<<<< Updated upstream
+=======
+      NW.icewallCD = 0; NW.sleepmistCD = 0; NW.mistUntil = 0; NW.speedBurstUntil = 0; NW.rootUntil = 0; NW.icewallActive = false; NW.triggeredWalls.clear();
+>>>>>>> Stashed changes
       p.taxiFly = false;
       p.rooted = false;
       p.actionImg = null;
@@ -236,6 +245,11 @@
     // nyan dev survivor kit
     const NY = { rocketCD: 0, dashCD: 0, dashUntil: 0, dashing: false, dashHit: false };
     const isNyan = () => effChar() === 'nyan';
+<<<<<<< Updated upstream
+=======
+    // noelle kit
+    const NW = { icewallCD: 0, sleepmistCD: 0, mistUntil: 0, speedBurstUntil: 0, rootUntil: 0, triggeredWalls: new Set(), icewallActive: false };
+>>>>>>> Stashed changes
     const NYAN_HP = 200; // survivor nyan is tanky
     const ROCKET_CD = 7200; // rocket wait
     const NYAN_DASH_CD = 5400; // rainbow dash wait

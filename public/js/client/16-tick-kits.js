@@ -1143,6 +1143,72 @@
       }
     }
 
+<<<<<<< Updated upstream
+=======
+    /** noelle tick: winter's embrace speed burst */
+    function tickNoelle(t) {
+      let { p, data, now } = t;
+      if (!p || p.evil || !isNoelle()) {
+        if (p && NW.rootUntil) { NW.rootUntil = 0; p.rooted = false; }
+        NW.triggeredWalls.clear();
+        NW.speedBurstUntil = 0;
+        NW.mistUntil = 0;
+        NW.icewallActive = false;
+        return;
+      }
+      // speed burst from destroyed icewall
+      const iws = (data && data.icewalls) || [];
+      for (const iw of iws) {
+        if (iw.owner === net.id && (iw.destroyed || iw.hp <= 0)) {
+          if (NW.icewallActive) {
+            NW.icewallActive = false;
+            if (!NW.triggeredWalls.has(iw.id + ':done')) {
+              NW.icewallCD = now + 15000;
+              NW.triggeredWalls.add(iw.id + ':done');
+            }
+          }
+        }
+        if (iw.destroyed && iw.destroyed_by === data.killer_id && iw.owner === net.id && !NW.triggeredWalls.has(iw.id)) {
+          NW.speedBurstUntil = now + 3000;
+          NW.triggeredWalls.add(iw.id);
+        }
+      }
+      // if no wall exists for us, ensure not active
+      const myWall = iws.find((w) => w.owner === net.id && !w.destroyed);
+      if (!myWall && NW.icewallActive) {
+        NW.icewallActive = false;
+        if (!(NW.triggeredWalls.has('any:done'))) {
+          NW.icewallCD = now + 15000;
+          NW.triggeredWalls.add('any:done');
+        }
+      }
+      game.moveSpeed = now < NW.speedBurstUntil ? 340 : 240; // steerable burst
+      // release cast root
+      if (NW.rootUntil && (now >= NW.rootUntil || p.alive === false || (p.stunT || 0) > 0)) {
+        NW.rootUntil = 0;
+        p.rooted = false;
+        if (poseName === 'icewall' || poseName === 'sleepmist') {
+          setPose(null, 0);
+          p.actionImg = null;
+          p.actionT = 0;
+        }
+      }
+      // play icewall anim
+      const iwf2 = noelleSprites.icewall || [];
+      if ((poseName === 'icewall' || poseName === 'sleepmist') && iwf2.length && NW.rootUntil && now < NW.rootUntil) {
+        const age = 800 - (NW.rootUntil - now);
+        const idx = Math.min(iwf2.length - 1, Math.floor(age / 130));
+        p.actionImg = iwf2[idx];
+        p.actionT = 0.15;
+      }
+      // mist over, cd starts
+      if (NW.mistUntil && now > NW.mistUntil) {
+        NW.mistUntil = 0;
+        NW.sleepmistCD = now + 25000;
+      }
+    }
+
+>>>>>>> Stashed changes
     function tickNyan(t) {
       let { p, isLMS, now } = t;
       // nyan dash

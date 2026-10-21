@@ -74,6 +74,21 @@
               : SFX + 'footstep2shadowmario.wav';
             fileSfx(footFile, { v: 0.18 });
           }
+<<<<<<< Updated upstream
+=======
+        } else if (typeof isNoelle === 'function' && isNoelle()) {
+          stepLoop.stop();
+          shadowMarioStepLoop.stop();
+          const now = Date.now();
+          const footInterval = Math.max(120, 350 - Math.abs(p.vel.x) / 3);
+          if (now - noelleLastFoot > footInterval) {
+            noelleLastFoot = now;
+            const footFile = noelleFootStep++ % 2 === 0
+              ? SFX + 'noelle_step.wav'
+              : SFX + 'noelle_step2.wav';
+            fileSfx(footFile, { v: 0.28 });
+          }
+>>>>>>> Stashed changes
         } else {
           shadowMarioStepLoop.stop();
           stepLoop.rate(0.4 + Math.abs(p.vel.x) / 900);

@@ -50,7 +50,7 @@ INTER_TIME = 30 # break time
 SELECT_TIME = 30 # pick time
 INTRO_TIME = 12 # killer intro video
 GRACE_TIME = 0 # no safe start
-LMS_DURATIONS = {"lux": 209.736, "sonic": 266.928, "supersonic": 266.928, "tails": 166.872, "nyan": 181.656, "mario": 178.128} # anthem lengths; default 105s
+LMS_DURATIONS = {"lux": 209.736, "sonic": 266.928, "supersonic": 266.928, "tails": 166.872, "nyan": 181.656, "mario": 178.128, "noelle": 181.656} # anthem lengths; default 105s
 TOUCH_DIST = 55 # touch range
 TOUCH_DMG = 25 # hit damage
 TOUCH_COOLDOWN = 0.0 # no survivor iframes
@@ -79,6 +79,7 @@ CHARACTERS = [
     {"id": "supersonic", "name": "SUPER SONIC", "dev": True},
     {"id": "nyan", "name": "NYAN CYAT", "dev": True},
     {"id": "mario", "name": "MARIO"},
+    {"id": "noelle", "name": "NOELLE"},
     {"id": "bear5", "name": "BEAR5", "killer": True, "dev": True},
     {"id": "shadowmario", "name": "SHADOW MARIO", "killer": True},
 ]

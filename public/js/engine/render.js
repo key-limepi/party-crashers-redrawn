@@ -3,6 +3,9 @@ Object.assign(PlatformerEngine.prototype, {
   render() {
     const { ctx, width, height } = this;
     ctx.imageSmoothingEnabled = false; // sharp pixels
+    ctx.webkitImageSmoothingEnabled = false;
+    ctx.mozImageSmoothingEnabled = false;
+    ctx.msImageSmoothingEnabled = false;
     ctx.fillStyle = this.background;
     ctx.fillRect(0, 0, width, height);
 
@@ -64,6 +67,51 @@ Object.assign(PlatformerEngine.prototype, {
       ctx.fill();
     }
     ctx.restore();
+<<<<<<< Updated upstream
+=======
+    // icewall art
+    for (const iw of this.icewalls || []) {
+      if (iw.destroyed) continue;
+      const stage = iw.hp > 22.5 ? 4 : iw.hp > 15 ? 3 : iw.hp > 7.5 ? 2 : 1;
+      const wi = this.icewallImgs && this.icewallImgs[stage - 1];
+      if (wi && wi.complete && wi.naturalWidth) {
+          const wh = iw.h;
+        const ww = Math.max(1, Math.round(wh * wi.naturalWidth / wi.naturalHeight));
+        ctx.drawImage(wi, Math.round(iw.x + iw.w / 2 - ww / 2), Math.round(iw.y + iw.h - wh), ww, wh);
+      }
+      // hp bar
+      const hpFrac = Math.max(0, iw.hp / 60);
+      ctx.fillStyle = '#000';
+      ctx.fillRect(iw.x - 2, iw.y - 8, iw.w + 4, 6);
+      ctx.fillStyle = '#7cc7ff';
+      ctx.fillRect(iw.x, iw.y - 6, iw.w * hpFrac, 4);
+    }
+    // sleepmist puff
+    for (const m of this.mists || []) {
+      const age = m.age || 0;
+      const a = age < 8 ? 0.85 : Math.max(0, 0.85 * (10 - age) / 2);
+      if (a <= 0) continue;
+      ctx.globalAlpha = a * 0.2;
+      ctx.fillStyle = '#bfe8ff';
+      ctx.beginPath();
+      ctx.arc(m.x, m.y, 200, 0, Math.PI * 2); // area edge
+      ctx.fill();
+      const mi = this.mistImg;
+      ctx.globalAlpha = a;
+      if (mi && mi.complete && mi.naturalWidth) {
+        // four drifting clouds
+        const cw = 120;
+        const ch = Math.round(cw * mi.naturalHeight / mi.naturalWidth);
+        const spots = [[-78, -30], [66, -52], [-36, 52], [58, 44]];
+        for (let i = 0; i < spots.length; i++) {
+          const bob = Math.sin(age * 2 + i * 1.7) * 8;
+          ctx.drawImage(mi, Math.round(m.x + spots[i][0] - cw / 2),
+                        Math.round(m.y + spots[i][1] - ch / 2 + bob), cw, ch);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+>>>>>>> Stashed changes
     // bomb art
     for (const bb of this.bombs) {
       if (bb.used) continue;
@@ -204,7 +252,12 @@ Object.assign(PlatformerEngine.prototype, {
         let offsetX = 0;
         if (box) {
           const base = this.baseFrame(b);
+<<<<<<< Updated upstream
           const scale = (base ? (b.drawH || b.h) / base.h : 1) * scaleX;
+=======
+          let scale = (base ? (b.drawH || b.h) / base.h : 1) * scaleX;
+          scale = Math.max(1, Math.round(scale));
+>>>>>>> Stashed changes
           // content box center
           const contentCenterX = box.x + box.w / 2;
           // full image center
@@ -235,6 +288,10 @@ Object.assign(PlatformerEngine.prototype, {
           ctx.save();
           if (b === this.player && b.invis) ctx.globalAlpha = 0.45;
           else if (b.isRemote && b.away) ctx.globalAlpha = 0.5;
+          ctx.imageSmoothingEnabled = false;
+          ctx.webkitImageSmoothingEnabled = false;
+          ctx.mozImageSmoothingEnabled = false;
+          ctx.msImageSmoothingEnabled = false;
           if (b.facing < 0) {
             ctx.translate(cx, 0);
             ctx.scale(-1, 1);
@@ -300,7 +357,7 @@ Object.assign(PlatformerEngine.prototype, {
       }
       // stack bars
       if (b === this.player || b.isRemote) {
-        const dw = b.drawW || b.w, dh = b.drawH || b.h;
+        const dw = b.drawW || b.w, dh = b.drawH || b.h; // keep aspect from frameSize elsewhere; this is bar/position only
         bars.push({
           b,
           bw: Math.max(dw, 50), bh: 8,

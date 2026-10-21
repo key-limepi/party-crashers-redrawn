@@ -128,8 +128,24 @@
       pinBox.focus();
     }
     async function savePin() {
-      // malice mode verifies
-      if (pinMode === 'malice') {
+      // malice/round mode verifies
+      if (pinMode === 'malice' || pinMode === 'round') {
+        if (pinMode === 'round') {
+          const res = await fetch('/api/pin/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: net.id, pin: pinBox.value.trim() }),
+          });
+          const out = await res.json().catch(() => ({}));
+          pinBox.value = '';
+          pinRow.style.display = 'none';
+          pinBanner.style.display = 'none';
+          pinMode = 'save';
+          document.getElementById('pinRememberLabel').style.display = '';
+          pinBanner.querySelector('.pinPrompt > span').textContent = 'ENTER YOUR PIN!!';
+          sayStatus(out.ok ? 'joining next match!! -15 digipogs' : (out.reason || 'could not join!!'), 5);
+          return;
+        }
         const res = await fetch('/api/malice/buy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -206,7 +222,7 @@
       verifyBox.blur();
       submitVerify();
     });
-    let pinMode = 'save'; // save or malice
+    let pinMode = 'save'; // save or malice or round
     buyMaliceBtn.addEventListener('click', async () => {
       if (!net.id) return;
       buyMaliceBtn.disabled = true;
@@ -232,9 +248,18 @@
       // paid path verifies pin
       pinMode = 'malice';
       document.getElementById('pinRememberLabel').style.display = 'none';
-      pinBanner.querySelector('.pinPrompt > span').textContent = `MALICE: ${net.me?.malice_price ?? '?'} DIGIPOGS - ENTER PIN!!`;
+      pinBanner.querySelector('.pinPrompt > span').textContent = `MALICE: -${net.me?.malice_price ?? '?'} DIGIPOGS - ENTER PIN!!`;
       showPinPrompt();
     });
+    function showRoundPinPrompt() {
+      if (net.me && net.me.formbar_mode === false) return;
+      pinMode = 'round';
+      document.getElementById('pinRememberLabel').style.display = 'none';
+      const cost = net.me && net.me.round_cost ? net.me.round_cost : 15;
+      pinBanner.querySelector('.pinPrompt > span').textContent = `NEXT MATCH: -${cost} DIGIPOGS - ENTER PIN!!`;
+      showPinPrompt();
+    }
+    window.showRoundPinPrompt = showRoundPinPrompt;
     const midBox = document.getElementById('midBox');
     let midShown = false;
     midBox.addEventListener('click', () => {

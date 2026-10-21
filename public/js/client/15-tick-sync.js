@@ -356,10 +356,17 @@
       // per-round join check
       const vb = document.getElementById('verifyBanner');
       if (vb) {
-        const needVerify = net.me && net.me.round_cost > 0 &&
+        const needVerify = net.me && net.me.formbar_mode !== false && net.me.round_cost > 0 &&
           (data.phase === 'intermission' || data.phase === 'select') &&
           you && you.paid === false && /verify/i.test(you.pay_msg || '');
-        vb.style.display = needVerify ? 'flex' : 'none';
+        if (needVerify && !net._roundPinAsked) {
+          net._roundPinAsked = true;
+          if (typeof window.showRoundPinPrompt === 'function') {
+            window.showRoundPinPrompt();
+          }
+        }
+        if (!needVerify) net._roundPinAsked = false;
+        vb.style.display = 'none';
       }
       // party list, round players only
       const showParty = data.phase === 'round' && net.id && you?.in_round !== false;
@@ -578,6 +585,14 @@
           else if (d.pose === 'smdive') r.actionImg = (r._shadowDiveVy || 0) < -30 ? shadowMarioSprites.jump : shadowMarioSprites.dive;
           r.actionT = 0.15;
           r._shadowPoseActive = true;
+        } else if ((d.pose === 'icewall' || d.pose === 'sleepmist') && r.char === 'noelle') {
+          const iwf = noelleSprites.icewall || [];
+          if (iwf.length) {
+            if (r._nwPose !== d.pose) { r._nwPose = d.pose; r._nwPoseStart = Date.now(); }
+            const elapsed = Date.now() - (r._nwPoseStart || Date.now());
+            r.actionImg = iwf[Math.min(iwf.length - 1, Math.floor(elapsed / 130))];
+            r.actionT = 0.15;
+          }
         } else if (r._shadowPoseActive) {
           r.actionImg = null; r.actionT = 0; r._shadowPoseActive = false; r._shadowPose = null; r.shadowMimicScale = 1;
         }
@@ -796,11 +811,12 @@
       const tailsLMS = isLMS && lmsChar === 'tails';
       const nyanLMS = isLMS && lmsChar === 'nyan';
       const marioLMS = isLMS && lmsChar === 'mario';
+      const noelleLMS = isLMS && lmsChar === 'noelle';
       const superLMS = isLMS && lmsChar === 'supersonic';
-      const lmsKey = luxLMS ? 'lmslux' : (sonicLMS ? 'lmssonic' : (tailsLMS ? 'lmstails' : (nyanLMS ? 'lmsnyan' : (marioLMS ? 'lmsmario' : (superLMS ? 'lmssonic' : 'lms')))));
+      const lmsKey = luxLMS ? 'lmslux' : (sonicLMS ? 'lmssonic' : (tailsLMS ? 'lmstails' : (nyanLMS ? 'lmsnyan' : (marioLMS ? 'lmsmario' : (noelleLMS ? 'lmsnoelle' : (superLMS ? 'lmssonic' : 'lms'))))));
       if (isLMS && lmsTrack !== lmsKey) {
         // start anthem
-        for (const k of ['chase', 'terror', 'shadowmariochase', 'map', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario']) {
+        for (const k of ['chase', 'terror', 'shadowmariochase', 'map', 'lms', 'lmslux', 'lmssonic', 'lmstails', 'lmsnyan', 'lmsmario', 'lmsnoelle']) {
           beds[k].pause();
           try { beds[k].currentTime = 0; } catch (_) { /* hush!! */ }
         }
@@ -813,7 +829,11 @@
           const lmsHp = Math.max(LMS_HP, survHp());
           p.maxHp = superGlow ? SUPER_HP : lmsHp; p.hp = superGlow ? SUPER_HP : lmsHp;
           S.dashCD = 0; S.cowerCD = 0; L.prayCD = 0; L.adCD = 0; L.overCD = 0; T.kickCD = 0; T.jabCD = 0; TW.flyCD = 0; TW.bombCD = 0; TW.whipCD = 0; TW.bombsLeft = 5;
+<<<<<<< Updated upstream
           NY.rocketCD = 0; NY.dashCD = 0; MU.fireballCD = 0;
+=======
+          NY.rocketCD = 0; NY.dashCD = 0; MU.fireballCD = 0; NW.icewallCD = 0; NW.sleepmistCD = 0; NW.icewallActive = false; NW.triggeredWalls.clear();
+>>>>>>> Stashed changes
           SS.boostCD = 0; SS.blockCD = 0; SS.spinCD = 0;
           fetch('/api/heal', {
             method: 'POST',
@@ -823,7 +843,7 @@
         }
       } else if (!isLMS && lmsTrack) {
         // lms over
-        beds.lms.pause(); beds.lmslux.pause(); beds.lmssonic.pause(); beds.lmstails.pause(); beds.lmsnyan.pause(); beds.lmsmario.pause();
+        beds.lms.pause(); beds.lmslux.pause(); beds.lmssonic.pause(); beds.lmstails.pause(); beds.lmsnyan.pause(); beds.lmsmario.pause(); beds.lmsnoelle.pause();
         lmsTrack = null; lmsEnded = false;
         if (!p.evil) {
           // drop buffs except super
@@ -857,7 +877,8 @@
         ['lmstails', tailsLMS ? 1 : 0, 0.25],
         ['lmsnyan', nyanLMS ? 1 : 0, 0.25],
         ['lmsmario', marioLMS ? 1 : 0, 0.25],
-        ['lms', isLMS && !luxLMS && !sonicLMS && !tailsLMS && !nyanLMS && !marioLMS && !superLMS ? 1 : 0, 0.25],
+        ['lmsnoelle', noelleLMS ? 1 : 0, 0.25],
+        ['lms', isLMS && !luxLMS && !sonicLMS && !tailsLMS && !nyanLMS && !marioLMS && !noelleLMS && !superLMS ? 1 : 0, 0.25],
         ['chase', chaseT, 0.9],
         ['terror', terrorT, 0.9],
         ['bear5chase', bear5ChaseT, 0.9],
@@ -867,7 +888,7 @@
         ['map', data.phase === 'round' ? 1 : 0, 0.12],
         ['wait', data.phase === 'lobby' ? 1 : 0, 0.3],
       ];
-      const bedT = { map: 0, wait: 0, inter: 0, lms: 0, lmslux: 0, lmssonic: 0, lmstails: 0, lmsnyan: 0, lmsmario: 0, hero: 0, chase: 0, terror: 0, bear5chase: 0, shadowmariochase: 0, charselect: 0 };
+      const bedT = { map: 0, wait: 0, inter: 0, lms: 0, lmslux: 0, lmssonic: 0, lmstails: 0, lmsnyan: 0, lmsmario: 0, lmsnoelle: 0, hero: 0, chase: 0, terror: 0, bear5chase: 0, shadowmariochase: 0, charselect: 0 };
       const win = cands.find((c) => c[1] > 0.05);
       if (win) bedT[win[0]] = win[2] * (win[0] === 'chase' || win[0] === 'terror' || win[0] === 'shadowmariochase' ? win[1] : 1);
       if (document.hidden) for (const k in bedT) bedT[k] = 0; // mute hidden
@@ -1014,6 +1035,37 @@
         if (!(data.spikes || []).some((sp) => sp.id === id)) seenSpikes.delete(id); // gone now
       }
       game.spikes = data.spikes || [];
+<<<<<<< Updated upstream
+=======
+      // icewall sync + wall collision
+      game.icewalls = data.icewalls || [];
+      game.mists = data.mists || [];
+      if (p && p.alive !== false) {
+        let cx = p.pos.x + p.w / 2, cy = p.pos.y + p.h / 2;
+        for (const iw of game.icewalls) {
+          if (iw.destroyed) continue;
+          if (p.evil) { // only killer blocked by wall
+            const dx = cx - (iw.x + iw.w / 2), dy = cy - (iw.y + iw.h / 2);
+            const ox = iw.w / 2 + p.w / 2 - Math.abs(dx);
+            const oy = iw.h / 2 + p.h / 2 - Math.abs(dy);
+            if (ox > 0 && oy > 0) {
+              if (ox < oy) {
+                // shove sideways
+                p.pos.x += dx < 0 ? -ox : ox;
+                p.vel.x = 0;
+              } else if (dy < 0) {
+                p.pos.y -= oy;
+                if (p.vel.y > 0) p.vel.y = 0;
+              } else {
+                p.pos.y += oy;
+                if (p.vel.y < 0) p.vel.y = 0;
+              }
+              cx = p.pos.x + p.w / 2; cy = p.pos.y + p.h / 2;
+            }
+          }
+        }
+      }
+>>>>>>> Stashed changes
       // bomb sync
       for (const bb of (data.bombs || [])) bombPos[bb.id] = { x: bb.x, y: bb.y, owner: bb.owner || null, refunded: !!bombPos[bb.id]?.refunded };
       for (const bid of Object.keys(bombPos)) {

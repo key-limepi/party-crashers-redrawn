@@ -311,6 +311,61 @@ def _expire_bombs(now):
             refunds.remove(refund)
 
 
+<<<<<<< Updated upstream
+=======
+def _expire_icewalls(now):
+    # melt icewalls after 20s
+    for iid in list(state.icewalls):
+        iw = state.icewalls[iid]
+        if iw.get("destroyed"):
+            if now - iw.get("destroyed_at", now) > 5:
+                del state.icewalls[iid]
+            continue
+        age = now - iw["at"]
+        if age > 20:
+            iw["destroyed"] = True
+            iw["destroyed_by"] = "melt"
+            iw["destroyed_at"] = now
+        else:
+            # hp drains toward melt
+            iw["hp"] = min(iw["hp"], 60 * (1 - age / 20))
+
+
+def _expire_noelle_slows(now):
+    # fade killer slows
+    for kid in list(state.noelle_slows):
+        sl = state.noelle_slows[kid]
+        if now > sl["fade_until"]:
+            del state.noelle_slows[kid]
+        elif now > sl["until"] and sl.get("active", True):
+            sl["active"] = False  # slow effect ends, fade begins
+
+
+def _tick_noelle_mists(now):
+    # mist follows, slows killer
+    kid = state.killer_id
+    killer = state.players.get(kid)
+    for m in list(state.noelle_mists):
+        owner = state.players.get(m.get("owner"))
+        if not owner or not owner.get("alive", True) or now - m["at"] > 10.0:
+            state.noelle_mists.remove(m)
+            continue
+        if not killer or not killer.get("alive", True) or killer.get("hp", 100) <= 0:
+            continue
+        ox = owner.get("x", 0) + owner.get("w", 50) / 2
+        oy = owner.get("y", 0) + owner.get("h", 70) / 2
+        kx = killer.get("x", 0) + killer.get("w", 50) / 2
+        ky = killer.get("y", 0) + killer.get("h", 70) / 2
+        dx, dy = kx - ox, ky - oy
+        if dx * dx + dy * dy < 200 * 200:
+            state.noelle_slows[kid] = {
+                "until": now + 3.0,
+                "fade_until": now + 4.0,
+                "active": True,
+            }
+
+
+>>>>>>> Stashed changes
 def _tick_lux_aura(now):
     # conversion tick, round only
     if state.phase != "round":

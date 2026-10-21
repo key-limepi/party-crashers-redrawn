@@ -28,6 +28,10 @@
       { id: 'tails', name: 'TAILS', nameImg: CS + 'tailsname.png' },
       { id: 'nyan', name: 'NYAN CYAT', nameImg: CS + 'nyanname.png' },
       { id: 'mario', name: 'MARIO', nameImg: CS + 'marioname.png' },
+<<<<<<< Updated upstream
+=======
+      { id: 'noelle', name: 'NOELLE', nameImg: './Assets/Images/UI/noellenametag.png' },
+>>>>>>> Stashed changes
     ];
     const TOKO = "./Assets/Images/Characters/Survivors/Toko/";
     const tokoSprites = {
@@ -156,6 +160,32 @@
     game.rocketImgs = [1, 2, 3, 4].map((n) => loadImg(NYAN + `rocket-${n}.png`));
     const charSprites = { lux: luxSprites, toko: tokoSprites, sonic: sonicSprites, supersonic: superSprites, tails: tailsSprites, nyan: nyanSprites, mario: marioSprites, evil: null }; // evil later
     const NYAN_H = 50; // low wide cat
+<<<<<<< Updated upstream
+=======
+    const NOELLE = "./Assets/Images/Characters/Survivors/Noelle/";
+    const noelleStand = [loadImg(NOELLE + "noelle_idle.png")];
+    const noelleWalk = [1, 2, 3, 4].map((n) => loadImg(NOELLE + `noelle_walk/sprite-3-${36 + n}.png`));
+    const noelleRun = [1, 2, 3, 4].map((n) => loadImg(NOELLE + `noelle_run/sprite-3-${24 + n}.png`));
+    const noelleJump = loadImg(NOELLE + "noelle_jump.png");
+    const noelleFall = loadImg(NOELLE + "noelle_fall.png");
+    const noelleStun = loadImg(NOELLE + "noelle_stun.png");
+    const noelleStruggle = [1, 2].map((n) => loadImg(NOELLE + `noelle_struggle/sprite-10-${3 + n}.png`));
+    const noelleCower = loadImg(NOELLE + "noelle_cower.png");
+    const noelleIcewallAnim = [1, 2, 3, 4, 5, 6].map((n) => loadImg(NOELLE + `noelle_icewall/noelle_icewall${n}.png`));
+    const noelleSprites = {
+      idle: noelleStand,
+      walk: noelleWalk,
+      run: noelleRun,
+      jump: noelleJump,
+      fall: noelleFall,
+      stun: noelleStun,
+      struggle: noelleStruggle,
+      cower: noelleCower,
+      dash: noelleRun[0],
+      icewall: noelleIcewallAnim,
+    };
+    const charSprites = { lux: luxSprites, toko: tokoSprites, sonic: sonicSprites, supersonic: superSprites, tails: tailsSprites, nyan: nyanSprites, mario: marioSprites, noelle: noelleSprites, evil: null }; // evil later
+>>>>>>> Stashed changes
     function wearChar(id) {
       game.setPlayerSprites(charSprites[id] || luxSprites);
       // true size

@@ -182,3 +182,42 @@
         fileSfx(SFX + 'spin_attack_mario.wav', {});
       }
     }
+<<<<<<< Updated upstream
+=======
+
+    /** noelle abilities: one queued key press (Z/X/...) */
+    function castNoelle(p, now, ab) {
+      if (ab === 'Z' && now >= NW.icewallCD && !NW.icewallActive && !p.rooted) {
+        // wall blocks killer path
+        NW.icewallActive = true;
+        NW.rootUntil = now + 800;
+        p.rooted = true;
+        const iwf = noelleSprites.icewall || [];
+        p.actionImg = iwf[0] || noelleSprites.idle[0]; p.actionT = 0.15;
+        setPose('icewall', 800);
+        fileSfx(SFX + 'icewall.mp3', { v: 0.5 });
+        const dir = p.facing || 1;
+        const wx = p.pos.x + p.w / 2 + dir * 57 - 30;
+        const wy = p.pos.y + p.h / 2 - 30;
+        fetch('/api/icewall', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: net.id, action: 'place', x: wx, y: wy }),
+        }).catch(() => {});
+      } else if (ab === 'X' && now >= NW.sleepmistCD && !NW.mistUntil && !p.rooted) {
+        // sleepmist - freezing mist around self
+        NW.mistUntil = now + 10000; // mist lasts 10s
+        NW.rootUntil = now + 800;
+        p.rooted = true;
+        const iwf = noelleSprites.icewall || [];
+        p.actionImg = iwf[0] || noelleSprites.idle[0]; p.actionT = 0.15;
+        setPose('sleepmist', 800);
+        fileSfx(SFX + 'sleep_mist.wav', { v: 0.5 });
+        fetch('/api/icewall', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: net.id, action: 'mist' }),
+        }).catch(() => {});
+      }
+    }
+>>>>>>> Stashed changes
