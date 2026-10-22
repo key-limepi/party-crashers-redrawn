@@ -1,6 +1,6 @@
-![Party Crashers Redrawn Logo](https://github.com/key-limepi/party-crashers-redrawn/blob/main/public/Assets/Images/logo.png?raw=true)
+![Party Crashers Redrawn Logo | 500](https://github.com/key-limepi/party-crashers-redrawn/blob/main/public/Assets/Images/logo.png?raw=true)
 **Party Crashers Redrawn** is a 2D ASYM (Similiar to the likes of *Dead By Daylight* and *Outcome Memories*) made for [Formbar](https://github.com/csmith1188/Formbar.js) programmed in Javascript and Python. This **README** acts as a guide for installing, running, and managing the game, as well as documents for future updates to come.
-[!CAUTION]
+> [!CAUTION]
 > This game is in early development, expect bugs and changes to the game as things advance in the future.
 ## Requirements (Before you host)
 If you are **hosting the game**, you will need a few things before you do so. These things include:
