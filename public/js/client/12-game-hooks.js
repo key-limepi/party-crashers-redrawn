@@ -6,6 +6,8 @@
     const WHIP_CD = 13500; // whip wait
     let shadowMarioFootStep = 0; // alternate between two footstep files
     let shadowMarioLastFoot = 0; // last footstep timestamp
+    let noelleFootStep = 0; // noelle footstep alternation
+    let noelleLastFoot = 0; // noelle footstep timestamp
     game.onCounter = () => {
       // eat hits
       S.countered = true;
@@ -74,8 +76,6 @@
               : SFX + 'footstep2shadowmario.wav';
             fileSfx(footFile, { v: 0.18 });
           }
-<<<<<<< Updated upstream
-=======
         } else if (typeof isNoelle === 'function' && isNoelle()) {
           stepLoop.stop();
           shadowMarioStepLoop.stop();
@@ -88,7 +88,6 @@
               : SFX + 'noelle_step2.wav';
             fileSfx(footFile, { v: 0.28 });
           }
->>>>>>> Stashed changes
         } else {
           shadowMarioStepLoop.stop();
           stepLoop.rate(0.4 + Math.abs(p.vel.x) / 900);

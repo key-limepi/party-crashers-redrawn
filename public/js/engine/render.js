@@ -67,17 +67,14 @@ Object.assign(PlatformerEngine.prototype, {
       ctx.fill();
     }
     ctx.restore();
-<<<<<<< Updated upstream
-=======
     // icewall art
     for (const iw of this.icewalls || []) {
       if (iw.destroyed) continue;
       const stage = iw.hp > 22.5 ? 4 : iw.hp > 15 ? 3 : iw.hp > 7.5 ? 2 : 1;
       const wi = this.icewallImgs && this.icewallImgs[stage - 1];
       if (wi && wi.complete && wi.naturalWidth) {
-          const wh = iw.h;
-        const ww = Math.max(1, Math.round(wh * wi.naturalWidth / wi.naturalHeight));
-        ctx.drawImage(wi, Math.round(iw.x + iw.w / 2 - ww / 2), Math.round(iw.y + iw.h - wh), ww, wh);
+        // fill the wall box so it reads as a tall ice pillar
+        ctx.drawImage(wi, Math.round(iw.x), Math.round(iw.y), Math.round(iw.w), Math.round(iw.h));
       }
       // hp bar
       const hpFrac = Math.max(0, iw.hp / 60);
@@ -111,7 +108,6 @@ Object.assign(PlatformerEngine.prototype, {
       }
       ctx.globalAlpha = 1;
     }
->>>>>>> Stashed changes
     // bomb art
     for (const bb of this.bombs) {
       if (bb.used) continue;
@@ -252,12 +248,8 @@ Object.assign(PlatformerEngine.prototype, {
         let offsetX = 0;
         if (box) {
           const base = this.baseFrame(b);
-<<<<<<< Updated upstream
-          const scale = (base ? (b.drawH || b.h) / base.h : 1) * scaleX;
-=======
           let scale = (base ? (b.drawH || b.h) / base.h : 1) * scaleX;
           scale = Math.max(1, Math.round(scale));
->>>>>>> Stashed changes
           // content box center
           const contentCenterX = box.x + box.w / 2;
           // full image center

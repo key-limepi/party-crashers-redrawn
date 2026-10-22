@@ -175,6 +175,9 @@ def start_round():
         pl["aura_hot_until"] = 0
     state.spikes.clear()
     state.bombs.clear()
+    state.icewalls.clear()
+    state.noelle_slows.clear()
+    del state.noelle_mists[:]
     state.pending_bomb_refunds.clear()
     state.rockets.clear()
     del state.blasts[:]
@@ -246,6 +249,9 @@ def end_round(winner):
         pl["aura_hot_until"] = 0
     state.spikes.clear()
     state.bombs.clear()
+    state.icewalls.clear()
+    state.noelle_slows.clear()
+    del state.noelle_mists[:]
     state.pending_bomb_refunds.clear()
     state.rockets.clear()
     del state.blasts[:]
@@ -311,8 +317,6 @@ def _expire_bombs(now):
             refunds.remove(refund)
 
 
-<<<<<<< Updated upstream
-=======
 def _expire_icewalls(now):
     # melt icewalls after 20s
     for iid in list(state.icewalls):
@@ -352,10 +356,10 @@ def _tick_noelle_mists(now):
             continue
         if not killer or not killer.get("alive", True) or killer.get("hp", 100) <= 0:
             continue
-        ox = owner.get("x", 0) + owner.get("w", 50) / 2
-        oy = owner.get("y", 0) + owner.get("h", 70) / 2
-        kx = killer.get("x", 0) + killer.get("w", 50) / 2
-        ky = killer.get("y", 0) + killer.get("h", 70) / 2
+        ox = owner.get("x", 0) + 14
+        oy = owner.get("y", 0) + 30
+        kx = killer.get("x", 0) + 14
+        ky = killer.get("y", 0) + 30
         dx, dy = kx - ox, ky - oy
         if dx * dx + dy * dy < 200 * 200:
             state.noelle_slows[kid] = {
@@ -365,7 +369,6 @@ def _tick_noelle_mists(now):
             }
 
 
->>>>>>> Stashed changes
 def _tick_lux_aura(now):
     # conversion tick, round only
     if state.phase != "round":
@@ -601,6 +604,9 @@ def game_tick():
                 _drop_timed_out(now)
                 _expire_lists(now)
                 _expire_bombs(now)
+                _expire_icewalls(now)
+                _expire_noelle_slows(now)
+                _tick_noelle_mists(now)
                 _tick_shields(now)
                 _tick_lux_aura(now)
                 handler = PHASE_TICKS.get(state.phase)

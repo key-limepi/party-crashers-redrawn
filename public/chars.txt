@@ -43,6 +43,12 @@ desc: Mr. Videogame himself!
 move: Z | FIREBALL | throw a fireball that stuns the killer on hit
 move: X | SPIN | extra jump that stuns on contact; 15s hit cooldown
 
+[noelle]
+desc: A gentle winter spirit who escapes rather than fights.
+move: Z | ICEWALL | ice wall blocks the killer; survivors pass through
+move: X | SLEEPMIST | drifting mist slows the killer if caught
+passive: speed burst when the killer breaks your wall
+
 [evil]
 desc: Here to finish the job.
 move: Z | M1 | slow heavy swing

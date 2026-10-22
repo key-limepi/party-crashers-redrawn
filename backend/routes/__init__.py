@@ -17,6 +17,7 @@ POST_ROUTES = {
     "/api/leave": players.leave,
     "/api/intro": lobby.intro,
     "/api/spike": traps.spike,
+    "/api/icewall": traps.icewall,
     "/api/bomb": traps.bomb,
     "/api/rocket": traps.rocket,
     "/api/hit": combat.hit,

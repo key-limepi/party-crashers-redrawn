@@ -80,6 +80,7 @@ async function netTick() {
         tickMario(t);
         tickNyan(t);
         tickTails(t);
+        tickNoelle(t);
         tickRopesAndRides(t);
         updateSpectate(t);
         updateFocusCamera(t);

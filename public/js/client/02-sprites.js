@@ -28,10 +28,7 @@
       { id: 'tails', name: 'TAILS', nameImg: CS + 'tailsname.png' },
       { id: 'nyan', name: 'NYAN CYAT', nameImg: CS + 'nyanname.png' },
       { id: 'mario', name: 'MARIO', nameImg: CS + 'marioname.png' },
-<<<<<<< Updated upstream
-=======
-      { id: 'noelle', name: 'NOELLE', nameImg: './Assets/Images/UI/noellenametag.png' },
->>>>>>> Stashed changes
+      { id: 'noelle', name: 'NOELLE', nameImg: CS + 'noelle_name.png' },
     ];
     const TOKO = "./Assets/Images/Characters/Survivors/Toko/";
     const tokoSprites = {
@@ -158,10 +155,7 @@
       dash: marioRun[0],
     };
     game.rocketImgs = [1, 2, 3, 4].map((n) => loadImg(NYAN + `rocket-${n}.png`));
-    const charSprites = { lux: luxSprites, toko: tokoSprites, sonic: sonicSprites, supersonic: superSprites, tails: tailsSprites, nyan: nyanSprites, mario: marioSprites, evil: null }; // evil later
     const NYAN_H = 50; // low wide cat
-<<<<<<< Updated upstream
-=======
     const NOELLE = "./Assets/Images/Characters/Survivors/Noelle/";
     const noelleStand = [loadImg(NOELLE + "noelle_idle.png")];
     const noelleWalk = [1, 2, 3, 4].map((n) => loadImg(NOELLE + `noelle_walk/sprite-3-${36 + n}.png`));
@@ -171,7 +165,8 @@
     const noelleStun = loadImg(NOELLE + "noelle_stun.png");
     const noelleStruggle = [1, 2].map((n) => loadImg(NOELLE + `noelle_struggle/sprite-10-${3 + n}.png`));
     const noelleCower = loadImg(NOELLE + "noelle_cower.png");
-    const noelleIcewallAnim = [1, 2, 3, 4, 5, 6].map((n) => loadImg(NOELLE + `noelle_icewall/noelle_icewall${n}.png`));
+    const noelleIcewallAnim = [loadImg(NOELLE + "noelle_icewall/noelle_icewall.png"),
+      ...[2, 3, 4, 5, 6].map((n) => loadImg(NOELLE + `noelle_icewall/noelle_icewall${n}.png`))];
     const noelleSprites = {
       idle: noelleStand,
       walk: noelleWalk,
@@ -185,7 +180,6 @@
       icewall: noelleIcewallAnim,
     };
     const charSprites = { lux: luxSprites, toko: tokoSprites, sonic: sonicSprites, supersonic: superSprites, tails: tailsSprites, nyan: nyanSprites, mario: marioSprites, noelle: noelleSprites, evil: null }; // evil later
->>>>>>> Stashed changes
     function wearChar(id) {
       game.setPlayerSprites(charSprites[id] || luxSprites);
       // true size
@@ -255,6 +249,8 @@
     game.chatBubbleImg = loadImg("./Assets/Images/UI/chatbub.png");
     game.alertArrow = loadImg("./Assets/Images/UI/CharacterSelect/left.png"); // ping arrow
     game.spikeImg = loadImg("./Assets/Images/Characters/Killers/EvilLux/spikes.png");
+    game.icewallImgs = [1, 2, 3, 4].map((n) => loadImg(NOELLE + `noelle_icewall/icewall_${n}.png`));
+    game.mistImg = loadImg(NOELLE + "sleep_mist.webp");
     game.bombImg = loadImg(TAILS + "bomb.png");
     game.boomImg = loadImg("./Assets/Images/Objects/explosion.gif");
 

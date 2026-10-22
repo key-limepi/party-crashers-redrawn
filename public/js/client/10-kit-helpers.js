@@ -104,10 +104,7 @@
       p.sneakColor = null;
       TW.bombCD = 0; TW.flyCD = 0; TW.whipCD = 0; TW.throwUntil = 0; TW.bombsLeft = 5; flyLoop.stop();
       NY.rocketCD = 0; NY.dashCD = 0; NY.dashUntil = 0; NY.dashing = false; NY.dashHit = false;
-<<<<<<< Updated upstream
-=======
       NW.icewallCD = 0; NW.sleepmistCD = 0; NW.mistUntil = 0; NW.speedBurstUntil = 0; NW.rootUntil = 0; NW.icewallActive = false; NW.triggeredWalls.clear();
->>>>>>> Stashed changes
       p.taxiFly = false;
       p.rooted = false;
       p.actionImg = null;
@@ -208,7 +205,8 @@
     const isTails = () => effChar() === 'tails';
     const isMario = () => effChar() === 'mario';
     const isShadowMario = () => !!(game.player && game.player.evil && net.killerPick === 'shadowmario');
-    const isLux = () => !isToko() && !isSonic() && !isSuper() && !isTails() && !isNyan() && !isMario();
+    const isNoelle = () => !!(game.player && !game.player.evil && net.pick === 'noelle');
+    const isLux = () => !isToko() && !isSonic() && !isSuper() && !isTails() && !isNyan() && !isMario() && !isNoelle();
     const isBear5 = () => !!(game.player && game.player.evil && (net.killerPick === 'bear5' || (game.player.char || '') === 'bear5'));
     // costume counts
     function effChar() {
@@ -245,11 +243,8 @@
     // nyan dev survivor kit
     const NY = { rocketCD: 0, dashCD: 0, dashUntil: 0, dashing: false, dashHit: false };
     const isNyan = () => effChar() === 'nyan';
-<<<<<<< Updated upstream
-=======
     // noelle kit
     const NW = { icewallCD: 0, sleepmistCD: 0, mistUntil: 0, speedBurstUntil: 0, rootUntil: 0, triggeredWalls: new Set(), icewallActive: false };
->>>>>>> Stashed changes
     const NYAN_HP = 200; // survivor nyan is tanky
     const ROCKET_CD = 7200; // rocket wait
     const NYAN_DASH_CD = 5400; // rainbow dash wait

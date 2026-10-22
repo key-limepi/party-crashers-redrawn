@@ -829,11 +829,7 @@
           const lmsHp = Math.max(LMS_HP, survHp());
           p.maxHp = superGlow ? SUPER_HP : lmsHp; p.hp = superGlow ? SUPER_HP : lmsHp;
           S.dashCD = 0; S.cowerCD = 0; L.prayCD = 0; L.adCD = 0; L.overCD = 0; T.kickCD = 0; T.jabCD = 0; TW.flyCD = 0; TW.bombCD = 0; TW.whipCD = 0; TW.bombsLeft = 5;
-<<<<<<< Updated upstream
-          NY.rocketCD = 0; NY.dashCD = 0; MU.fireballCD = 0;
-=======
           NY.rocketCD = 0; NY.dashCD = 0; MU.fireballCD = 0; NW.icewallCD = 0; NW.sleepmistCD = 0; NW.icewallActive = false; NW.triggeredWalls.clear();
->>>>>>> Stashed changes
           SS.boostCD = 0; SS.blockCD = 0; SS.spinCD = 0;
           fetch('/api/heal', {
             method: 'POST',
@@ -1035,8 +1031,6 @@
         if (!(data.spikes || []).some((sp) => sp.id === id)) seenSpikes.delete(id); // gone now
       }
       game.spikes = data.spikes || [];
-<<<<<<< Updated upstream
-=======
       // icewall sync + wall collision
       game.icewalls = data.icewalls || [];
       game.mists = data.mists || [];
@@ -1045,27 +1039,19 @@
         for (const iw of game.icewalls) {
           if (iw.destroyed) continue;
           if (p.evil) { // only killer blocked by wall
-            const dx = cx - (iw.x + iw.w / 2), dy = cy - (iw.y + iw.h / 2);
+            const feet = p.pos.y + p.h;
+            if (feet <= iw.y + 4) continue; // cleared the top
+            const dx = cx - (iw.x + iw.w / 2);
             const ox = iw.w / 2 + p.w / 2 - Math.abs(dx);
-            const oy = iw.h / 2 + p.h / 2 - Math.abs(dy);
-            if (ox > 0 && oy > 0) {
-              if (ox < oy) {
-                // shove sideways
-                p.pos.x += dx < 0 ? -ox : ox;
-                p.vel.x = 0;
-              } else if (dy < 0) {
-                p.pos.y -= oy;
-                if (p.vel.y > 0) p.vel.y = 0;
-              } else {
-                p.pos.y += oy;
-                if (p.vel.y < 0) p.vel.y = 0;
-              }
+            if (ox > 0) {
+              // shove sideways
+              p.pos.x += dx < 0 ? -ox : ox;
+              p.vel.x = 0;
               cx = p.pos.x + p.w / 2; cy = p.pos.y + p.h / 2;
             }
           }
         }
       }
->>>>>>> Stashed changes
       // bomb sync
       for (const bb of (data.bombs || [])) bombPos[bb.id] = { x: bb.x, y: bb.y, owner: bb.owner || null, refunded: !!bombPos[bb.id]?.refunded };
       for (const bid of Object.keys(bombPos)) {

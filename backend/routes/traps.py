@@ -1,5 +1,6 @@
 """generated from the old do_POST; module: traps"""
 
+import math
 import time
 
 from .. import state
@@ -38,8 +39,6 @@ def spike(h, data):
     return
 
 
-<<<<<<< Updated upstream
-=======
 def icewall(h, data):
     """POST /api/icewall"""
     # noelle places or damages icewall
@@ -52,6 +51,7 @@ def icewall(h, data):
             except (ValueError, TypeError):
                 h.send_json({"ok": False, "reason": "bad spot"})
                 return
+            pid = data.get("id")
             # too close to another wall
             for w in state.icewalls.values():
                 if not w.get("destroyed") and (x - w["x"]) ** 2 + (y - w["y"]) ** 2 < 140 ** 2:
@@ -64,9 +64,8 @@ def icewall(h, data):
                     return
             state.icewall_seq += 1
             iid = f"i{state.icewall_seq}"
-            pid = data.get("id")
             state.icewalls[iid] = {
-                "x": x, "y": y, "w": 60, "h": 110,
+                "x": x, "y": y, "w": 60, "h": 190,
                 "hp": 60, "at": time.time(),
                 "owner": pid, "destroyed": False, "destroyed_by": None,
             }
@@ -95,13 +94,18 @@ def icewall(h, data):
             return
         if action == "mist" and me and state.phase == "round" and me.get("char") == "noelle" and not me.get("evil"):
             now = time.time()
-            px = me.get("x", 0) + me.get("w", 50) / 2
-            py = me.get("y", 0) + me.get("h", 70) / 2
+            # one mist at a time
+            for m in list(state.noelle_mists):
+                if m.get("owner") == data.get("id") and now - m["at"] < 10.0:
+                    h.send_json({"ok": False, "reason": "mist is out!!"})
+                    return
+            px = me.get("x", 0) + 14
+            py = me.get("y", 0) + 30
             state.noelle_mists.append({"owner": data.get("id"), "at": now})
             kid = state.players.get(state.killer_id)
             if kid and kid.get("alive", True) and kid.get("hp", 100) > 0:
-                kx = kid.get("x", 0) + kid.get("w", 50) / 2
-                ky = kid.get("y", 0) + kid.get("h", 70) / 2
+                kx = kid.get("x", 0) + 14
+                ky = kid.get("y", 0) + 30
                 if math.hypot(kx - px, ky - py) < 200:
                     state.noelle_slows[state.killer_id] = {
                         "until": now + 3.0,
@@ -116,7 +120,6 @@ def icewall(h, data):
     return
 
 
->>>>>>> Stashed changes
 def bomb(h, data):
     """POST /api/bomb"""
     # tails traps, airborne throws

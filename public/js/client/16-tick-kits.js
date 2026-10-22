@@ -247,6 +247,10 @@
               castMario(p, now, ab);
               continue;
             }
+          if (isNoelle()) {
+              castNoelle(p, now, ab);
+              continue;
+            }
           const luxCdMult = () => 1.1 * (L.prayer === 'haste' ? 1.5 : L.prayer === 'burden' ? 0.7 : 1) * (isLMS ? LMS_CD : 1);
           if (ab === 'Z' && now >= L.prayCD && !L.prayUntil && !L.rushing && !L.panting) {
             // kneel and pray, exposed
@@ -319,6 +323,9 @@
         } else if (ab === 'Z' && !m1Muted && now >= K.m1CD) {
           // slow swing
           K.m1CD = now + 1200;
+          const wall = (game.icewalls || []).find((w) => !w.destroyed &&
+            Math.abs(w.x + w.w / 2 - (p.pos.x + p.w / 2)) < 120 &&
+            Math.abs(w.y + w.h / 2 - (p.pos.y + p.h / 2)) < 110);
           const victim = game.remotes
             .filter((r) => !r.evil && r.alive && r.hp > 0 &&
               Math.abs(r.pos.x - p.pos.x) < 120 &&
@@ -327,7 +334,16 @@
           p._m1v = Math.floor(Math.random() * evilM1.length); // everyone sees this same frame
           p.actionImg = evilM1[p._m1v]; p.actionT = 0.25; // swing frame
           setPose('swing', 300);
-          if (victim) {
+          if (wall) {
+            // swing chips wall
+            fileSfx(SFX + 'm1_hit.wav', { v: 0.3 });
+            hitBurst(wall.x + wall.w / 2, wall.y + wall.h / 2, false, true);
+            fetch('/api/icewall', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: net.id, action: 'hit', icewall: wall.id }),
+            }).catch(() => {});
+          } else if (victim) {
             fetch('/api/hit', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -556,7 +572,14 @@
       // fast ghost
       if (p.evil) {
         const speed = isBear5() ? 820 : isShadowMario() ? (SM.mimic ? (SHADOW_MIMIC_SPEED[SM.mimic] || 240) : SHADOW_MARIO_SPEED) : p.invis ? EVIL_SNEAK_SPEED : EVIL_SPEED;
-        game.moveSpeed = speed * (now < (p.bombSlowUntil || 0) ? 0.5 : 1);
+        let slowMul = 1;
+        const ns = data.noelle_slows && data.noelle_slows[data.killer_id];
+        if (ns) {
+          const un = ns.until * 1000, fd = ns.fade_until * 1000; // seconds to ms
+          if (ns.active && now < un) slowMul = 0.25;
+          else if (now < fd) slowMul = 0.25 + 0.75 * (now - un) / (fd - un);
+        }
+        game.moveSpeed = speed * (now < (p.bombSlowUntil || 0) ? 0.5 : 1) * slowMul;
       }
     }
 
@@ -1143,8 +1166,6 @@
       }
     }
 
-<<<<<<< Updated upstream
-=======
     /** noelle tick: winter's embrace speed burst */
     function tickNoelle(t) {
       let { p, data, now } = t;
@@ -1208,7 +1229,6 @@
       }
     }
 
->>>>>>> Stashed changes
     function tickNyan(t) {
       let { p, isLMS, now } = t;
       // nyan dash

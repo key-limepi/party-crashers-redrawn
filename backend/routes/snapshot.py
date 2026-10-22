@@ -76,6 +76,12 @@ def players_snapshot(h, url):
                             else (max(0, int(state.lms_notice_until - now)) if state.lms_notice_until > now and state.phase == "round" else 0)),
             "result": state.result,
             "spikes": [dict(s, id=sid) for sid, s in state.spikes.items()],
+            "icewalls": [dict(w, id=iid) for iid, w in state.icewalls.items()],
+            "noelle_slows": state.noelle_slows,
+            "mists": [{"x": state.players[m["owner"]].get("x", 0) + 14,
+                       "y": state.players[m["owner"]].get("y", 0) + 30,
+                       "age": round(now - m["at"], 2)}
+                      for m in state.noelle_mists if m.get("owner") in state.players],
             "bombs": [dict(s, id=bid) for bid, s in state.bombs.items()],
             "tosses": [dict(s) for s in state.bomb_tosses.values()],
             "rockets": [dict(r, age=round(now - r["at"], 2)) for r in state.rockets.values()],

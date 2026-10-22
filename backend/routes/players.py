@@ -9,6 +9,9 @@ from ..admins import is_admin
 from ..config import CHARACTERS, DIGIPOGS_ON, FORMBAR_MODE, OVERHEAL_BONUS, OVERHEAL_CD, OVERHEAL_RADIUS, STATE_KEYS
 from ..game import note_death
 
+BODY_W = 28 # body hitbox width
+BODY_H = 60 # body hitbox height
+
 
 def join(h, data):
     """POST /api/join"""
@@ -80,6 +83,20 @@ def state_post(h, data):
             for key in STATE_KEYS:
                 if key in data:
                     pl[key] = data[key]
+            # icewall blocks the killer
+            if state.phase == "round" and state.killer_id == pl.get("id"):
+                _x = pl.get("x", 0)
+                _y = pl.get("y", 0)
+                for iw in state.icewalls.values():
+                    if iw.get("destroyed"):
+                        continue
+                    if _y + BODY_H <= iw["y"] + 4:
+                        continue  # cleared the top
+                    mid = iw["x"] + iw["w"] / 2
+                    if abs(_x - mid) >= iw["w"] / 2 + BODY_W / 2:
+                        continue
+                    side = -1 if _x < mid else 1
+                    pl["x"] = mid + side * (iw["w"] / 2 + BODY_W / 2)
             if "mimic" in data:
                 candidate = data.get("mimic")
                 survivor_chars = {c["id"] for c in CHARACTERS if not c.get("killer")}

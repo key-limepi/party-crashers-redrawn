@@ -43,7 +43,7 @@
       }
     }
     window.addEventListener('resize', fitPreviewInfo);
-    fetch('./chars.txt').then((r) => r.text()).then((txt) => {
+    fetch('./chars.txt', { cache: 'no-store' }).then((r) => r.text()).then((txt) => {
       // section per id, # comments
       let cur = null;
       for (const raw of txt.split('\n')) {

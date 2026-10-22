@@ -139,7 +139,7 @@
       heal: SFX + 'lux_healpatch.mp3',
     };
     const MARIO_JUMPS = [SFX + 'mario_jump.wav'];
-    game.onJump = (dbl) => { const p = game.player; const isMarioChar = typeof isMario === 'function' && isMario() && p && !p.evil; const isShadowMarioChar = p && p.evil && net.killerPick === 'shadowmario'; fileSfx((isMarioChar || isShadowMarioChar) ? vpick(MARIO_JUMPS) : SFX + 'jump.wav', (isMarioChar || isShadowMarioChar) ? { rate: dbl ? 1.3 : 1, v: 0.3 } : { rate: dbl ? 1.3 : 1 }); };
+    game.onJump = (dbl) => { const p = game.player; const isMarioChar = typeof isMario === 'function' && isMario() && p && !p.evil; const isShadowMarioChar = p && p.evil && net.killerPick === 'shadowmario'; const isNoelleChar = typeof isNoelle === 'function' && isNoelle(); fileSfx(isNoelleChar ? SFX + 'noelle_jump.wav' : (isMarioChar || isShadowMarioChar) ? vpick(MARIO_JUMPS) : SFX + 'jump.wav', (isMarioChar || isShadowMarioChar) ? { rate: dbl ? 1.3 : 1, v: 0.3 } : { rate: dbl ? 1.3 : 1 }); };
     game.onHeal = (n) => {
       // sync heal
       if (!net.id || !game.player) return;

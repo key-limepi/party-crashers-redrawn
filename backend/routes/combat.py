@@ -1,5 +1,6 @@
 """generated from the old do_POST; module: combat"""
 
+import math
 import time
 
 from .. import state
@@ -57,6 +58,18 @@ def hit(h, data):
                      180 if stun <= 0 else 130)
             dx = vic.get("x", 0) - k.get("x", 0)
             dy = vic.get("y", 0) - k.get("y", 0)
+            # icewall blocks killer attacks
+            if atk_evil:
+                for iw in state.icewalls.values():
+                    if iw.get("destroyed"):
+                        continue
+                    wcx = iw["x"] + iw["w"] / 2
+                    ax = k.get("x", 0) + 14
+                    vx = vic.get("x", 0) + 14
+                    # opposite sides of the wall
+                    if (ax - wcx) * (vx - wcx) < 0 and abs(ax - wcx) < 140 and abs(vx - wcx) < 140:
+                        h.send_json({"ok": False, "reason": "blocked by icewall"})
+                        return
             if dx * dx + dy * dy < reach * reach:
                 # spared cower
                 if atk_evil and vic.get("cower", False):

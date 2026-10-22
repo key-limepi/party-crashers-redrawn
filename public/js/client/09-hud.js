@@ -32,6 +32,7 @@
       tails: './Assets/Images/UI/tailsicon.png',
       nyan: './Assets/Images/UI/nyanicon.png',
       mario: './Assets/Images/UI/marioicon.png',
+      noelle: './Assets/Images/UI/noelle_icon.PNG',
     };
     function renderParty(self, p, others, killerId) {
       partyList.innerHTML = '';
@@ -192,6 +193,11 @@
           { key: 'Z', name: 'FIREBALL', icon: null, cd: () => MU.fireballCD },
           { key: 'X', name: 'SPIN', icon: null, cd: () => MU.spinCD },
         ];
+      } else if (isNoelle()) {
+        abilDefs = [
+          { key: 'Z', name: 'ICEWALL', icon: null, cd: () => NW.icewallCD },
+          { key: 'X', name: 'SLEEPMIST', icon: null, cd: () => Math.max(NW.sleepmistCD, NW.mistUntil) },
+        ];
       } else {
         abilDefs = [
           { key: 'Z', name: 'PRAY', icon: ABIL_ICONS.pray, cd: () => L.prayCD },
@@ -258,7 +264,7 @@
       const now = Date.now();
       const p = game.player;
       if (!p || !net.id) return;
-      const role = p.evil ? (net.killerPick === 'bear5' ? 'bear5' : net.killerPick === 'shadowmario' ? 'shadowmario' : 'evil') : (isNyan() ? 'nyan' : isToko() ? 'toko' : (isSonic() ? 'sonic' : (isSuper() ? (SS.transformed ? 'super' : 'super0') : (isTails() ? 'tails' : (isMario() ? 'mario' : 'lux')))));
+      const role = p.evil ? (net.killerPick === 'bear5' ? 'bear5' : net.killerPick === 'shadowmario' ? 'shadowmario' : 'evil') : (isNyan() ? 'nyan' : isToko() ? 'toko' : (isSonic() ? 'sonic' : (isSuper() ? (SS.transformed ? 'super' : 'super0') : (isTails() ? 'tails' : (isMario() ? 'mario' : (isNoelle() ? 'noelle' : 'lux'))))));
       if (role !== abilRole) {
         abilRole = role;
         buildAbilities();
