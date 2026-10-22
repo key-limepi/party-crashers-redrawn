@@ -63,7 +63,7 @@ move: Z | M1 | one-tap folding swing
 passive: Super speed.
 
 [shadowmario]
-desc: A shadowy Mario who can disguise himself and ambush survivors.
+desc: A shadowy Mario made by the paintbrush of Bowser Jr.
 move: Z | M1 | swing for 20 damage
 move: X | SLAM | jump and slam for 45 damage and 1s stun
 move: C | MIMIC | disguise as a survivor until using M1
