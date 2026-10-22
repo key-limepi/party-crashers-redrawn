@@ -1,6 +1,8 @@
 async function netTick() {
       const p = game.player;
       if (!net.id || !p) return;
+      // the local body needs its net id so rope/kit code can match it by id
+      p.id = net.id;
       if (document.hidden) {
         // dead tabs
         const now = performance.now();

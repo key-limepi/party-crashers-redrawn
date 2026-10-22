@@ -1361,7 +1361,9 @@
           for (const vc of victims) {
             if (vc === pl) continue;
             const targetId = pl === p ? K.pullTarget : pl.pullTarget;
-            if (!targetId || vc.id !== targetId) continue;
+            // the local body answers to net.id, remotes carry their own id
+            const vcId = vc === p ? net.id : vc.id;
+            if (!targetId || vcId !== targetId) continue;
             const mx = vc.pos.x + vc.w / 2, my = vc.pos.y + vc.h / 2;
             if (Math.hypot(kx - mx, ky - my) < PULL_RANGE) {
               game.pullLinks.push({ x1: mx, y1: my, x2: kx, y2: ky });

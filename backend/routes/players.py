@@ -92,6 +92,8 @@ def state_post(h, data):
                         continue
                     if _y + BODY_H <= iw["y"] + 4:
                         continue  # cleared the top
+                    if _y >= iw["y"] + iw.get("h", 190) - 4:
+                        continue  # under the wall base
                     mid = iw["x"] + iw["w"] / 2
                     if abs(_x - mid) >= iw["w"] / 2 + BODY_W / 2:
                         continue

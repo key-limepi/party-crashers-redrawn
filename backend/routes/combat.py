@@ -66,6 +66,14 @@ def hit(h, data):
                     wcx = iw["x"] + iw["w"] / 2
                     ax = k.get("x", 0) + 14
                     vx = vic.get("x", 0) + 14
+                    # the wall is a standing pillar, it only blocks near its own height
+                    wy = iw["y"]
+                    wh = iw.get("h", 190)
+                    ky = k.get("y", 0)
+                    vy = vic.get("y", 0)
+                    spans = ((ky < wy + wh and wy < ky + 60) or (vy < wy + wh and wy < vy + 60))
+                    if not spans:
+                        continue
                     # opposite sides of the wall
                     if (ax - wcx) * (vx - wcx) < 0 and abs(ax - wcx) < 140 and abs(vx - wcx) < 140:
                         h.send_json({"ok": False, "reason": "blocked by icewall"})

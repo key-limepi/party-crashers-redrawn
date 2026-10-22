@@ -592,9 +592,13 @@
             const elapsed = Date.now() - (r._nwPoseStart || Date.now());
             r.actionImg = iwf[Math.min(iwf.length - 1, Math.floor(elapsed / 130))];
             r.actionT = 0.15;
+            r._nwPoseActive = true;
           }
         } else if (r._shadowPoseActive) {
           r.actionImg = null; r.actionT = 0; r._shadowPoseActive = false; r._shadowPose = null; r.shadowMimicScale = 1;
+        } else if (r._nwPoseActive) {
+          // pose ended. remotes never tick actionT down, so drop it by hand
+          r.actionImg = null; r.actionT = 0; r._nwPoseActive = false; r._nwPose = null; r._nwPoseStart = 0;
         }
         r._wasWindup = !!d.windup;
         // sync sonic flags
@@ -1040,7 +1044,9 @@
           if (iw.destroyed) continue;
           if (p.evil) { // only killer blocked by wall
             const feet = p.pos.y + p.h;
+            const base = iw.y + (iw.h || 190);
             if (feet <= iw.y + 4) continue; // cleared the top
+            if (p.pos.y >= base - 4) continue; // under the wall base
             const dx = cx - (iw.x + iw.w / 2);
             const ox = iw.w / 2 + p.w / 2 - Math.abs(dx);
             if (ox > 0) {
