@@ -126,26 +126,6 @@ Object.assign(PlatformerEngine.prototype, {
       if (ti && ti.complete && ti.naturalWidth) this.drawContent(ctx, ti, Math.round(t.x), Math.round(t.y + BOMB_R), BOMB_DH);
       else { ctx.fillStyle = '#333'; ctx.fillRect(Math.round(t.x) - BOMB_R, Math.round(t.y) - BOMB_R, BOMB_R * 2, BOMB_R * 2); }
     }
-    // Mario fireballs are short-lived, straight moving projectiles.
-    const nowMs = Date.now();
-    this.marioFireballs = (this.marioFireballs || []).filter((f) => f.mine
-      ? nowMs - f.start < 7000
-      : nowMs - (f.syncedAt || f.start) < 500);
-    for (const f of this.marioFireballs) {
-      const frames = marioSprites.fireball;
-      const age = Math.max(0, nowMs - f.start);
-      const img = frames[Math.floor(age / 65) % frames.length];
-      if (!img || !img.complete || !img.naturalWidth) continue;
-      const extrapolate = Math.min(0.07, Math.max(0, (nowMs - (f.syncedAt || nowMs)) / 1000));
-      const x = f.x + f.vx * extrapolate;
-      const y = f.y + f.vy * extrapolate + 750 * extrapolate * extrapolate;
-      const w = 18, h = 18;
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(age * 0.018);
-      ctx.drawImage(img, -w / 2, -h / 2, w, h);
-      ctx.restore();
-    }
     // boom pops
     if (window.FX_ON !== false) for (const b of this.booms) {
       const img = b.img || this.boomImg;
@@ -277,6 +257,10 @@ Object.assign(PlatformerEngine.prototype, {
         }
         // skip body when rocketing
         if (!b.rocketing) {
+          const live3d = window.Mario3D && window.Mario3D.queue(b);
+          if (live3d) {
+            // 3d overlay handles body
+          } else {
           ctx.save();
           if (b === this.player && b.invis) ctx.globalAlpha = 0.45;
           else if (b.isRemote && b.away) ctx.globalAlpha = 0.5;
@@ -317,6 +301,7 @@ Object.assign(PlatformerEngine.prototype, {
             ctx.restore();
           }
           ctx.restore();
+          }
         }
         // draw held bomb
         if (b.holdingBomb && !b.rocketing) {
@@ -491,5 +476,6 @@ Object.assign(PlatformerEngine.prototype, {
       for (const r of this.remotes) ctx.strokeRect(r.pos.x, r.pos.y, r.w, r.h);
     }
     ctx.restore();
+    if (window.Mario3D) window.Mario3D.flush();
   },
 });

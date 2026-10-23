@@ -134,8 +134,6 @@
     const marioStun = loadImg(MARIO + "stun.png");
     const marioSpin = [1, 2, 3, 4].map((n) => loadImg(MARIO + `spinjump/sprite-42-${n}.png`));
     const marioLuma = [1, 2, 3, 4].map((n) => loadImg(MARIO + `luma_particle/sprite-41-${n}.png`));
-    const marioFireballThrow = [1, 2, 3, 4, 5, 6, 7, 8].map((n) => loadImg(MARIO + `fireball_throw/sprite-51-${n}.png`));
-    const marioFireball = [10, 11, 12, 13].map((n) => loadImg(MARIO + `fireball_particle/sprite-51-${n}.png`));
     const marioSprites = {
       idle: marioStand,
       idleFps: 8, // fast flip
@@ -147,8 +145,7 @@
       fall: marioFall,
       spin: marioSpin, // extra jump
       luma: marioLuma, // one-shot puff
-      fireballThrow: marioFireballThrow,
-      fireball: marioFireball,
+      dive: marioFall,
       stun: marioStun,
       struggle: [marioWalk[0], marioWalk[1]],
       cower: marioStand[0],
@@ -253,4 +250,3 @@
     game.mistImg = loadImg(NOELLE + "sleep_mist.webp");
     game.bombImg = loadImg(TAILS + "bomb.png");
     game.boomImg = loadImg("./Assets/Images/Objects/explosion.gif");
-

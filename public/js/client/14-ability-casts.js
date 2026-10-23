@@ -157,22 +157,28 @@
 
     /** mario abilities: one queued key press (Z/X/...) */
     function castMario(p, now, ab) {
-      if (ab === 'Z' && now >= MU.fireballCD && !MU.fireballUntil && !MU.fireballPending) {
-        // throw a fireball
-        MU.fireballUntil = now + 650;
-        MU.fireballLaunchAt = now;
-        MU.fireballPending = true;
-        MU.fireballProjectile = null;
-        MU.fireballDir = p.facing || 1;
+      if (ab === 'Z' && now >= MU.diveCD && !MU.diveUntil) {
+        MU.diveUntil = now + 520;
+        MU.diveAnimUntil = now + 700;
+        MU.diveHit = false;
+        MU.diveDir = p.facing || 1;
+        p.mario3dAction = 'mdive';
         p.rooted = true;
-        p.actionImg = marioSprites.fireballThrow[0]; p.actionT = 0.15;
-        setPose('fireball', 650);
-        fileSfx(SFX + 'mario-fireball.mp3', {});
+        p.chargeDir = MU.diveDir;
+        p.chargeSpeed = 900;
+        p.vel.x = MU.diveDir * p.chargeSpeed;
+        p.vel.y = Math.min(p.vel.y, -120);
+        p.onGround = false;
+        p.actionImg = marioSprites.dive; p.actionT = 0.55;
+        setPose('dive', 520);
+        fileSfx(SFX + 'mario_dive.wav', {});
       } else if (ab === 'X' && now >= MU.spinCD && !MU.spinUntil && !MU.spinUsed) {
         // spin jump, one per air
         MU.spinUsed = true;
         MU.spinUntil = now + 1000;
+        MU.spinAnimUntil = now + 1000;
         MU.spinHit = false;
+        p.mario3dAction = 'mspin';
         p.vel.y = -900;
         p.onGround = false;
         p.noCutUntil = game.time + 1.0; // keep full hop
@@ -180,6 +186,7 @@
         setPose('spin', 1000);
         game.spawnSprite(p.pos.x + p.w / 2, p.pos.y + p.h / 2, marioSprites.luma, 0.15); // luma puff
         fileSfx(SFX + 'spin_attack_mario.wav', {});
+        fileSfx(SFX + 'mario_spin_voice.wav', {});
       }
     }
 

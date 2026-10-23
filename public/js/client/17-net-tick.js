@@ -40,10 +40,6 @@ async function netTick() {
             dtmult: isLux() ? (L.dt || 1) : 1, healmult: isLux() ? (L.heal || 1) : 1,
             praying: isLux() && !!L.prayUntil, rushing: isLux() && !!L.rushing, panting: isLux() && (!!L.panting || (p.hp ?? 0) > (p.maxHp ?? 100)),
             pose: (poseName && Date.now() < poseUntil) ? poseName : null,
-            fireball: isMario() && MU.fireballProjectile ? {
-              id: MU.fireballProjectile.id, x: MU.fireballProjectile.x, y: MU.fireballProjectile.y,
-              vx: MU.fireballProjectile.vx, vy: MU.fireballProjectile.vy,
-            } : null,
             anim: curAnim(p), m1v: p._m1v || 0, trail: !!(p.evil && game.fly),
           }),
         });

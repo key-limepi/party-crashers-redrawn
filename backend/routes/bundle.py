@@ -39,6 +39,7 @@ FILES = [
     "js/client/15-tick-sync.js",
     "js/client/16-tick-kits.js",
     "js/client/17-net-tick.js",
+    "js/client/18-mario3d.js",
 ]
 
 

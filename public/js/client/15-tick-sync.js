@@ -476,6 +476,7 @@
         r.pullTarget = d.pulltarget || null;
         // synced animations (super sonic, evil rush, bear5 trail)
         const an = d.anim || null;
+        r.mario3dAction = an;
         r.trail = !!d.trail;
         r.boosting = an === 'sboost';
         r.echarge = an === 'echarge';
@@ -617,30 +618,10 @@
           r.poseImg = superSprites.transform[Math.floor(Date.now() / 200) % superSprites.transform.length];
           r.poseUntil = Date.now() + 150;
         }
-        // Mario's throw animation and observed fireball
-        if (!r.evil && r.char === 'mario' && d.pose === 'fireball') {
-          if (r._mfbPose !== d.pose) {
-            r._mfbPose = d.pose;
-            r._mfbStart = Date.now();
-          }
-          const age = Date.now() - r._mfbStart;
-          r.poseImg = marioSprites.fireballThrow[Math.min(marioSprites.fireballThrow.length - 1, Math.floor(age / 80))];
+        // Mario's dive pose
+        if (!r.evil && r.char === 'mario' && d.pose === 'dive') {
+          r.poseImg = marioSprites.dive;
           r.poseUntil = Date.now() + 150;
-        } else if (r._mfbPose) {
-          r._mfbPose = null;
-        }
-        const observedFireball = !r.evil && r.char === 'mario' && d.fireball;
-        const remoteShot = (game.marioFireballs ||= []).find((f) => !f.mine && f.owner === r.id);
-        if (observedFireball && observedFireball.id) {
-          const shot = remoteShot || { owner: r.id, mine: false, start: Date.now() };
-          if (shot.id !== observedFireball.id) shot.start = Date.now();
-          shot.id = observedFireball.id;
-          shot.x = observedFireball.x; shot.y = observedFireball.y;
-          shot.vx = observedFireball.vx; shot.vy = observedFireball.vy;
-          shot.syncedAt = Date.now();
-          if (!remoteShot) game.marioFireballs.push(shot);
-        } else if (remoteShot) {
-          game.marioFireballs = game.marioFireballs.filter((f) => f !== remoteShot);
         }
         const lostHp = r._lastHp !== undefined && r.hp < r._lastHp;
         const realHit = lostHp && r.hp < (r.maxHp || 100);
@@ -833,7 +814,7 @@
           const lmsHp = Math.max(LMS_HP, survHp());
           p.maxHp = superGlow ? SUPER_HP : lmsHp; p.hp = superGlow ? SUPER_HP : lmsHp;
           S.dashCD = 0; S.cowerCD = 0; L.prayCD = 0; L.adCD = 0; L.overCD = 0; T.kickCD = 0; T.jabCD = 0; TW.flyCD = 0; TW.bombCD = 0; TW.whipCD = 0; TW.bombsLeft = 5;
-          NY.rocketCD = 0; NY.dashCD = 0; MU.fireballCD = 0; NW.icewallCD = 0; NW.sleepmistCD = 0; NW.icewallActive = false; NW.triggeredWalls.clear();
+          NY.rocketCD = 0; NY.dashCD = 0; MU.diveCD = 0; NW.icewallCD = 0; NW.sleepmistCD = 0; NW.icewallActive = false; NW.triggeredWalls.clear();
           SS.boostCD = 0; SS.blockCD = 0; SS.spinCD = 0;
           fetch('/api/heal', {
             method: 'POST',

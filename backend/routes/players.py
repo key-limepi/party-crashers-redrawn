@@ -2,7 +2,6 @@
 
 import secrets
 import time
-import math
 
 from .. import state
 from ..admins import is_admin
@@ -61,7 +60,6 @@ def join(h, data):
             "alive": True, "invis": False, "m1": True,
             "stunned": False, "pull": False, "away": False, "cower": False,
             "windup": False, "pose": None, "dashing": False, "stun_until": 0,
-            "fireball": None,
             "hp_ack": 100, # last hp it told us
             "shield": 0, # blue bonus hp
             "shield_next": 0.0, # drain tick
@@ -116,24 +114,6 @@ def state_post(h, data):
                 else:
                     pl["mimic_target"] = None
                     pl["mimic_name"] = None
-            if "fireball" in data:
-                fb = data.get("fireball")
-                if isinstance(fb, dict) and pl.get("char") == "mario" and state.phase == "round":
-                    try:
-                        x, y = float(fb["x"]), float(fb["y"])
-                        vx, vy = float(fb["vx"]), float(fb["vy"])
-                        if all(math.isfinite(v) and abs(v) <= 10000 for v in (x, y, vx, vy)):
-                            pl["fireball"] = {
-                                "id": str(fb.get("id", ""))[:32],
-                                "x": round(x, 1), "y": round(y, 1),
-                                "vx": round(vx, 1), "vy": round(vy, 1),
-                            }
-                        else:
-                            pl["fireball"] = None
-                    except (KeyError, TypeError, ValueError):
-                        pl["fireball"] = None
-                else:
-                    pl["fireball"] = None
             # anim is just a short name, keep it small
             if not isinstance(pl.get("anim"), str):
                 pl["anim"] = None
@@ -346,4 +326,3 @@ def overheal(h, data):
             response["self_only"] = True
         h.send_json(response)
     return
-

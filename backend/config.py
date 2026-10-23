@@ -101,7 +101,7 @@ STATE_KEYS = ("x", "y", "facing", "moving", "onGround",
               "invis", "m1", "stunned", "pull", "cower", "windup", "pose", "dashing",
               "peeling", "spinning", "spinwindup", "pullwindup", "pulltarget", "lift", "super", "forming", "holding", "whipuntil",
               "dtmult", "healmult", "praying", "rushing", "panting",
-              "anim", "m1v", "trail", "fireball", "mimic")
+              "anim", "m1v", "trail", "mimic")
 
 # lux overheal tuning
 AURA_RADIUS = 260 # conversion reach

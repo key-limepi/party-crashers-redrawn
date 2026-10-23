@@ -1081,67 +1081,69 @@
     }
 
     function tickMario(t) {
-      let { p, isLMS, now } = t;
-      // Mario's fireball and spin
+      let { p, data } = t;
+      const now = Date.now();
+      const isLMS = !!(data.lms || data.lms_set);
+      // Mario's dive and spin
       if (!p.evil && isMario()) {
         const ek = game.remotes.find((r) => r.id === net.ekid && r.alive && r.hp > 0);
         const ekClose = (dx, dy) => ek &&
           Math.abs(ek.pos.x - p.pos.x) < dx &&
           Math.abs((ek.pos.y + ek.h / 2) - (p.pos.y + p.h / 2)) < dy;
-        if (MU.fireballUntil && now < MU.fireballUntil && p.alive !== false && (p.stunT || 0) <= 0) {
-          const age = now - (MU.fireballUntil - 650);
-          p.actionImg = marioSprites.fireballThrow[Math.min(marioSprites.fireballThrow.length - 1, Math.floor(age / 80))];
-          p.actionT = 0.15;
-        } else if (MU.fireballUntil) {
-          MU.fireballUntil = 0;
+        const finishDive = (hit) => {
+          MU.diveUntil = 0;
           p.rooted = false;
-          if (p.actionImg && marioSprites.fireballThrow.includes(p.actionImg)) { p.actionImg = null; p.actionT = 0; }
-        }
-        if (MU.fireballPending && !MU.fireballProjectile && MU.fireballLaunchAt && now >= MU.fireballLaunchAt && p.alive !== false && (p.stunT || 0) <= 0) {
-          const dir = MU.fireballDir || p.facing || 1;
-          const x = p.pos.x + p.w / 2 + dir * (p.w / 2 + 9);
-          const y = p.pos.y + p.h - 9;
-          MU.fireballProjectile = {
-            id: `${net.id}-${now}`, x, y, vx: dir * 480, vy: -260,
-            age: 0, lastStepAt: now, stepRemainder: 0, start: now,
-            owner: net.id, mine: true,
-          };
-          (game.marioFireballs ||= []).push(MU.fireballProjectile);
-          MU.fireballLaunchAt = 0;
-        } else if (MU.fireballLaunchAt && now >= MU.fireballLaunchAt && (p.alive === false || (p.stunT || 0) > 0)) {
-          MU.fireballLaunchAt = 0;
-          MU.fireballUntil = 0;
-          MU.fireballCD = now + 20000 * (isLMS ? LMS_CD : 1);
-          MU.fireballPending = false;
-          p.rooted = false;
-        }
-        const shot = MU.fireballProjectile;
-        if (shot) {
-          const elapsed = Math.max(0, Math.min(1.5, (now - shot.lastStepAt) / 1000));
-          shot.lastStepAt = now;
-          const result = game.stepMarioFireball(shot, elapsed, ek);
-          if (result.hit || result.expired || p.alive === false) {
-            MU.fireballProjectile = null;
-            game.marioFireballs = game.marioFireballs.filter((f) => f !== shot);
-            const finish = (landed) => {
-              MU.fireballCD = Date.now() + (landed ? 12000 : 20000) * (isLMS ? LMS_CD : 1);
-              MU.fireballPending = false;
-              MU.fireballLaunchAt = 0;
-            };
-            if (result.hit) {
+          p.chargeDir = 0;
+          p.chargeSpeed = 0;
+          p.vel.x = MU.diveDir * 180;
+          if (p.actionImg === marioSprites.dive) {
+            p.actionImg = null;
+            p.actionT = 0;
+          }
+          if (!hit) MU.diveCD = Date.now() + 20000 * (isLMS ? LMS_CD : 1);
+        };
+        if (MU.diveUntil) {
+          if (now < MU.diveUntil && p.alive !== false && (p.stunT || 0) <= 0) {
+            p.rooted = true;
+            p.chargeDir = MU.diveDir;
+            p.chargeSpeed = 900;
+            p.actionImg = marioSprites.dive;
+            p.actionT = 0.15;
+            if (
+              !MU.diveHit &&
+              ek &&
+              p.pos.x <= ek.pos.x + ek.w + 6 &&
+              p.pos.x + p.w + 6 >= ek.pos.x &&
+              p.pos.y <= ek.pos.y + ek.h + 6 &&
+              p.pos.y + p.h + 6 >= ek.pos.y
+            ) {
+              MU.diveHit = true;
+              finishDive(true);
+              MU.diveCD = Date.now() + 20000 * (isLMS ? LMS_CD : 1);
+              fileSfx(SFX + 'basic_hit.wav', {});
               hitBurst(ek.pos.x + ek.w / 2, ek.pos.y + ek.h / 2, false, false);
               fetch('/api/hit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id: net.id, victim: ek.id, dmg: 0, stun: 3, fireball: true }),
-              }).then((response) => response.json()).then((result) => finish(!!result.ok)).catch(() => finish(false));
-            } else finish(false);
+                body: JSON.stringify({ id: net.id, victim: ek.id, dmg: 0, stun: 3, ability: true }),
+              }).then((response) => response.json()).then((result) => {
+                MU.diveCD = Date.now() + (result.ok ? 12000 : 20000) * (isLMS ? LMS_CD : 1);
+              }).catch(() => {
+                MU.diveCD = Date.now() + 20000 * (isLMS ? LMS_CD : 1);
+              });
+            }
           } else {
-            shot.syncedAt = now;
+            finishDive(false);
           }
         }
+        if (MU.diveAnimUntil <= now && p.mario3dAction === 'mdive') {
+          p.mario3dAction = null;
+        }
         // fresh air, fresh spin
-        if (p.onGround) MU.spinUsed = false;
+        if (p.onGround) {
+          MU.spinUsed = false;
+          MU.spinAnimUntil = 0;
+        }
         // spinning jump
         if (MU.spinUntil) {
           p.actionImg = marioSprites.spin[Math.floor((now - (MU.spinUntil - 1000)) / 120) % 4]; p.actionT = 0.15;
@@ -1161,7 +1163,11 @@
             MU.spinUntil = 0;
             MU.spinCD = now + (MU.spinHit ? 12000 : 20000) * (isLMS ? LMS_CD : 1);
             p.actionImg = null; p.actionT = 0;
+            if (p.alive === false || (p.stunT || 0) > 0) MU.spinAnimUntil = 0;
           }
+        }
+        if (MU.spinAnimUntil <= now && p.mario3dAction === 'mspin') {
+          p.mario3dAction = null;
         }
       }
     }

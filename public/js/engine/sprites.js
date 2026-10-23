@@ -181,14 +181,12 @@ Object.assign(PlatformerEngine.prototype, {
   drawContent(ctx, img, cx, bottomY, h) {
     const box = this.contentBox(img);
     if (!box) {
-      const nw = img.naturalWidth || img.width;
-      const nh = img.naturalHeight || img.height;
-      const dw = Math.max(1, Math.round(h * (nw / nh)));
-      ctx.drawImage(img, Math.round(cx - dw / 2), Math.round(bottomY - h), dw, Math.round(h));
+      ctx.drawImage(img, Math.round(cx - h / 2), Math.round(bottomY - h), h, h);
       return;
     }
     const dw = Math.max(1, Math.round(h * box.w / box.h));
     ctx.drawImage(img, box.x, box.y, box.w, box.h,
+      
       Math.round(cx - dw / 2), Math.round(bottomY - h), dw, h);
   },
 
@@ -201,18 +199,11 @@ Object.assign(PlatformerEngine.prototype, {
     let scale = base ? boxH / base.h : boxH / img.naturalHeight;
     const s = b.sprites;
     if (s && Array.isArray(s.jump) && s.jump.includes(img)) scale *= (s.jumpScale || 1);
-    scale = Math.max(1, Math.round(scale));
     const trim = this.trimB(img);
-    let dw = Math.max(1, Math.round(img.naturalWidth * scale));
-    let dh = Math.max(1, Math.round((img.naturalHeight - trim) * scale));
-    const target = 72;
-    const maxd = Math.max(dw, dh);
-    if (maxd !== target) {
-      const factor = target / maxd;
-      dw = Math.max(1, Math.round(dw * factor));
-      dh = Math.max(1, Math.round(dh * factor));
-    }
-    return { dw, dh };
+    return {
+      dw: Math.max(1, Math.round(img.naturalWidth * scale)),
+      dh: Math.max(1, Math.round((img.naturalHeight - trim) * scale)),
+    };
   },
 
   // sprite order

@@ -5,6 +5,10 @@
     function curAnim(p) {
       const now = Date.now();
       if (p.evil) return K.charging ? 'echarge' : null;
+      if (isMario()) {
+        if (MU.diveAnimUntil > now) return 'mdive';
+        if (MU.spinAnimUntil > now) return 'mspin';
+      }
       if (!isSuper() || !SS.transformed) return null;
       if (SS.boostWindup && now < SS.boostWindup) return 'sskid';
       if (SS.boosting) return 'sboost';
@@ -40,7 +44,7 @@
         if (pose === 'boost') return superSprites.boost[0];
         if (pose === 'block') return superSprites.guard;
       } else if (char === 'mario') {
-        if (pose === 'fireball') return marioSprites.fireballThrow[0];
+        if (pose === 'dive') return marioSprites.dive;
         if (pose === 'spin') return marioSprites.spin[0];
       } else if (char === 'noelle') {
         if (pose === 'icewall' || pose === 'sleepmist') {
@@ -78,10 +82,8 @@
       p.praying = false; p.rushing = false; p.panting = false;
       T.kickUntil = 0; T.jabUntil = 0;
       T.kickCD = 0; T.jabCD = 0; T.kickHit = false; T.jabHit = false;
-      MU.fireballCD = 0; MU.fireballUntil = 0; MU.fireballLaunchAt = 0;
-      if (MU.fireballProjectile) game.marioFireballs = (game.marioFireballs || []).filter((f) => f !== MU.fireballProjectile);
-      MU.fireballProjectile = null; MU.fireballPending = false;
-      MU.spinCD = 0; MU.spinUntil = 0; MU.spinHit = false; MU.spinUsed = false;
+      MU.diveCD = 0; MU.diveUntil = 0; MU.diveAnimUntil = 0; MU.diveHit = false; MU.diveDir = 0;
+      MU.spinCD = 0; MU.spinUntil = 0; MU.spinAnimUntil = 0; MU.spinHit = false; MU.spinUsed = false;
       SM.mimic = null; SM.mimicTarget = null; SM.mimicUntil = 0;
       SM.m1CD = 0; SM.slamCD = 0; SM.slamActive = false; SM.slamStartedAt = 0; SM.slamAirborne = false;
       SM.slamHitIds.clear(); SM.slamRecoveryUntil = 0;
@@ -108,6 +110,7 @@
       p.taxiFly = false;
       p.rooted = false;
       p.actionImg = null;
+      p.mario3dAction = null;
       game.pullSrc = null; game.peelSrc = null; game.liftSrc = null;
     }
     // survivor kit
@@ -131,11 +134,10 @@
       kickCD: 0, jabCD: 0, kickUntil: 0, kickHit: false,
       jabUntil: 0, jabHit: false,
     };
-    // mario fireball and spin kit
+    // mario dive and spin kit
     const MU = {
-      fireballCD: 0, fireballUntil: 0, fireballLaunchAt: 0,
-      fireballProjectile: null, fireballPending: false,
-      spinCD: 0, spinUntil: 0, spinHit: false, spinUsed: false,
+      diveCD: 0, diveUntil: 0, diveAnimUntil: 0, diveHit: false, diveDir: 0,
+      spinCD: 0, spinUntil: 0, spinAnimUntil: 0, spinHit: false, spinUsed: false,
     };
     const SM = {
       mimic: null, mimicTarget: null, mimicUntil: 0,

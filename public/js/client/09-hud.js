@@ -190,7 +190,7 @@
         ];
       } else if (isMario()) {
         abilDefs = [
-          { key: 'Z', name: 'FIREBALL', icon: null, cd: () => MU.fireballCD },
+          { key: 'Z', name: 'DIVE', icon: null, cd: () => MU.diveCD },
           { key: 'X', name: 'SPIN', icon: null, cd: () => MU.spinCD },
         ];
       } else if (isNoelle()) {
